@@ -1,1 +1,672 @@
-/* You can add global styles to this file, and also import other style files */
+/* Root Colors */
+:root {
+  --dark-bg: #19183B;
+  --dark-card: #708993;
+  --dark-text: #E7F2EF;
+  --light-bg: #E7F2EF;
+  --light-card: #A1C2BD;
+  --light-text: #19183B;
+
+  --transition-speed: 0.3s;
+}
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+/* Global Admin Buttons */
+button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: #708993;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-speed), transform 0.2s ease;
+  background: var(--dark-card);
+  color: var(--light-text);
+}
+
+body.dark-mode button {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+
+button:hover {
+  transform: scale(1.05);
+  background:  var(--dark-card);/* subtle hover highlight */
+}
+body.dark-mode button:hover {
+  transform: scale(1.05);
+  background:  var(--light-card);/* subtle hover highlight */
+}
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Body & theme switch */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--light-bg);
+  color: var(--light-text);
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+}
+
+/* Navbar */
+.nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  background: var(--light-card);
+  transition: background var(--transition-speed);
+}
+
+body.dark-mode .nav {
+  background: var(--dark-card);
+}
+
+.nav .brand {
+  font-weight: 700;
+  font-size: 22px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.nav .links a,
+.nav .links .greeting,
+.nav .links .link-button {
+  margin-left: 16px;
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+  cursor: pointer;
+  transition: color var(--transition-speed);
+}
+
+.nav .links a:hover,
+.nav .links .link-button:hover {
+  color: #ffdd57;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 80px 20px;
+  background: linear-gradient(135deg, #708993, #A1C2BD);
+  color: #fff;
+  transition: background var(--transition-speed);
+}
+
+body.dark-mode .hero {
+  background: linear-gradient(135deg, #19183B, #708993);
+}
+
+.hero h1 {
+  font-size: 36px;
+  margin-bottom: 16px;
+  animation: fadeInDown 1s ease;
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 24px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeIn 1.2s ease;
+}
+
+.hero a {
+  text-decoration: none;
+  background: #E7F2EF;
+  color: #19183B;
+  padding: 12px 28px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode .hero a {
+  background: #708993;
+  color: #E7F2EF;
+}
+
+.hero a:hover {
+  transform: scale(1.05);
+}
+
+/* Sections */
+.section {
+  padding: 60px 20px;
+  max-width: 900px;
+  margin: auto;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+.section h2 {
+  font-size: 28px;
+  margin-bottom: 16px;
+}
+
+/* Team cards */
+.team {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 20px;
+}
+
+.team-member {
+  background: var(--light-card);
+  color: var(--light-text);
+  border-radius: 12px;
+  padding: 20px;
+  width: 180px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  transition: transform 0.3s ease, background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode .team-member {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+
+.team-member:hover {
+  transform: translateY(-8px) scale(1.05);
+}
+
+/* Login page */
+/* Full page split layout */
+.login-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Left illustration side */
+.login-image {
+  flex: 1;
+  background: linear-gradient(135deg, #708993, #A1C2BD);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+}
+
+.login-image img {
+  max-width: 80%;
+  height: auto;
+}
+
+/* Right login side */
+.login-container {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: var(--light-bg);
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode .login-container {
+  background: var(--dark-bg);
+}
+
+.login-card {
+  background: var(--light-card);
+  padding: 40px 35px;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 380px;
+  text-align: center;
+   align-items: center; 
+  box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+body.dark-mode .login-card {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+
+.login-card h2 {
+  margin-bottom: 8px;
+  font-size: 26px;
+}
+
+.login-card .subtitle {
+  margin-bottom: 24px;
+  color: #666;
+  font-size: 14px;
+}
+
+body.dark-mode .login-card .subtitle {
+  color: #ccc;
+}
+
+.login-card input {
+  width: 100%;
+  text-align: center;
+  max-width: 280px;      
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  outline: none;
+}
+
+.login-card button {
+  display: inline-block;
+  width: 150px;        /* fixed smaller width */
+  padding: 12px;
+  border-radius: 25px; /* pill shape */
+  border: none;
+  background: var(--btn-bg-light);
+  color: var(--btn-text-light);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 12px auto 0 auto;  /* center horizontally */
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+
+.login-card button:hover {
+  background:  var(--light-card);
+  transform: scale(1.05);
+}
+
+.login-card button:disabled {
+  background:  var(--dark-card);
+  cursor: not-allowed;
+}
+body.dark-mode .login-card button {
+  background: #708993;
+  color: #E7F2EF;
+}
+
+.error {
+  color: #ff4d4f;
+  margin-top: 8px;
+  font-size: 14px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .login-wrapper {
+    flex-direction: column;
+  }
+  .login-image {
+    display: none;
+  }
+}
+
+.admin-container {
+      display: flex;
+      height: 100vh;
+      margin: 0;      
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 200px;
+      background: var(--light-card);
+      color: var(--light-text);
+      padding: 20px 10px; 
+      display: flex;
+      flex-direction: column;
+      transition: background var(--transition-speed), color var(--transition-speed);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+    }
+    body.dark-mode .sidebar {
+      background: var(--dark-card);
+      color: var(--dark-text);
+      box-shadow: 2px 0 8px rgba(0,0,0,0.3);
+    }
+    .sidebar h2 {
+      font-size: 22px;
+      margin-bottom: 30px;
+      font-weight: 700;
+      text-align: center;
+    }
+    .sidebar nav button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 12px 16px;
+      margin-bottom: 10px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: inherit;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .sidebar nav button:hover {
+      background: rgba(0,0,0,0.05);
+      transform: scale(1.02);
+    }
+    .sidebar nav button.active {
+      background: var(--light-card);  /* for light mode */
+  color: var(--light-text);
+      font-weight: 600;
+    }
+body.dark-mode .sidebar nav button.active {
+  background: var(--dark-card);   /* for dark mode */
+  color: var(--dark-text);
+  font-weight: 600;
+}
+    /* Content area */
+    .content {
+      flex: 1;
+      padding: 25px 30px;
+      overflow-y: auto;
+      background: var(--light-bg);
+      transition: background var(--transition-speed), color var(--transition-speed);
+    }
+    body.dark-mode .content {
+      background: var(--dark-bg);
+      color: var(--dark-text);
+    }
+
+    /* Scrollbar styling */
+    .content::-webkit-scrollbar {
+      width: 10px;
+    }
+    .content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .content::-webkit-scrollbar-thumb {
+      background: rgba(0,0,0,0.2);
+      border-radius: 5px;
+    }
+
+    /* Icons styling */
+    fa-icon {
+      width: 20px;
+    }
+
+    /* Users Container */
+h2 {
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Actions */
+.actions {
+  margin-bottom: 16px;
+}
+.actions button {
+  padding: 10px 20px;
+  border-radius: 8px;
+  border: none;
+  background: var(--light-card);
+  color: var(--light-text);
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--transition-speed), transform 0.2s ease;
+}
+body.dark-mode .actions button {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.actions button:hover {
+  transform: scale(1.05);
+}
+
+/* Form Panel */
+.form-panel {
+  background: var(--light-card);
+  color: var(--light-text);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+body.dark-mode .form-panel {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.form-panel input, .form-panel select {
+  width: calc(100% - 24px);
+  padding: 8px 12px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+body.dark-mode .form-panel input, 
+body.dark-mode .form-panel select {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+  border: 1px solid #555;
+}
+
+/* Table */
+.users-table {
+  width: 100%;
+  border-collapse: collapse;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+.users-table th, .users-table td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+.users-table th {
+  background: var(--light-card);
+}
+body.dark-mode .users-table th {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.users-table tr:hover {
+  background: rgba(0,0,0,0.05);
+}
+.users-table button {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  background: #ff4d4f;
+  color: white;
+  font-weight: 500;
+  transition: transform 0.2s ease;
+}
+.users-table button:hover {
+  transform: scale(1.05);
+}
+
+/* Message */
+.msg {
+  margin-top: 10px;
+  color: green;
+  font-weight: 500;
+}
+
+/* Admin -Course comp */
+/* Header */
+h2 {
+  margin-bottom: 20px;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+/* Search */
+.search {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 300px;
+  margin-bottom: 14px;
+}
+body.dark-mode .search {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+  border: 1px solid #555;
+}
+
+/* Panel Form */
+.panel {
+  background: var(--light-card);
+  padding: 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+body.dark-mode .panel {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.panel input, .panel select, .panel button {
+  padding: 8px 12px;
+  margin: 6px 0;
+  border-radius: 6px;
+}
+.panel button {
+  border: none;
+  background: var(--light-bg);
+  color: var(--light-text);
+  cursor: pointer;
+  font-weight: 500;
+}
+body.dark-mode .panel button {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+}
+.panel button:hover {
+  transform: scale(1.05);
+}
+
+/* Course Cards */
+.courses-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.course-card {
+  width: 220px;
+  background: var(--light-card);
+  color: var(--light-text);
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, background var(--transition-speed), color var(--transition-speed);
+}
+body.dark-mode .course-card {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.course-card:hover {
+  transform: translateY(-6px) scale(1.03);
+}
+.course-card button {
+  margin-top: 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: none;
+  background: #ff4d4f;
+  color: white;
+  cursor: pointer;
+}
+.course-card button:hover {
+  transform: scale(1.05);
+}
+
+
+/* admin-Course,batch */
+.panel {
+  background: var(--light-card);
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  transition: background var(--transition-speed), color var(--transition-speed);
+}
+body.dark-mode .panel {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+.panel input, .panel select, .panel button {
+  padding: 8px 12px;
+  margin: 6px 0;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+body.dark-mode .panel input, 
+body.dark-mode .panel select {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+  border: 1px solid #555;
+}
+button {
+  border: none;
+  background: var(--light-bg);
+  color: var(--light-text);
+  cursor: pointer;
+  font-weight: 500;
+}
+body.dark-mode button {
+  background: var(--dark-bg);
+  color: var(--dark-text);
+}
+button:hover {
+  transform: scale(1.05);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+}
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+}
+th {
+  background: var(--light-card);
+  font-weight: 600;
+}
+body.dark-mode th {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+tr:hover {
+  background: rgba(0,0,0,0.05);
+}
+
+/* admin-enrollments&feedback */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+}
+th, td {
+  padding: 12px;
+  border-bottom: 1px solid #ccc;
+  text-align: left;
+}
+th {
+  background: var(--light-card);
+  font-weight: 600;
+}
+body.dark-mode th {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+tr:hover {
+  background: rgba(0,0,0,0.05);
+}

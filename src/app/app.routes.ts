@@ -8,6 +8,9 @@ import { ManagerDashboardComponent } from './components/navbar/manager/manager-d
 import { AdminUsersComponent } from './admin/admin-users.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
+import { BatchesListComponent } from './components/navbar/manager/manager-batchlist.component';
+import { CalendarListComponent } from './components/navbar/manager/manager-coursecalandar.component';
+import { EnrollmentComponent } from './components/navbar/manager/manager-enrollment.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
@@ -20,6 +23,7 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['Employee'] }
   },
+  
   {
     path: 'my-enrollments',
     component: MyEnrollmentsComponent,
@@ -33,7 +37,24 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['Manager'] }
   },
-
+  {
+    path: 'batches',
+    component: BatchesListComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['Manager'] }
+  },
+    {
+    path: 'calendar',
+    component: CalendarListComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['Manager'] }
+  },
+    {
+    path: 'enrollment',
+    component: EnrollmentComponent,
+    canActivate: [AuthGuard, RoleGuard],
+    data: { roles: ['Manager'] }
+  },
   {
     path: 'admin',
     component: AdminComponent,

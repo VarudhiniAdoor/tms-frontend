@@ -9,30 +9,32 @@ import { AuthService } from '../../../core/auth.service';
   imports: [CommonModule, RouterLink],
   template: `
   <nav class="nav">
-    <a routerLink="/" class="brand">TMS</a>
-
-    <div class="links">
-      <a routerLink="/">Home</a>
-      <a *ngIf="isEmployee" routerLink="/employee">Calendar</a>
-      <a *ngIf="isEmployee" routerLink="/my-enrollments">My Enrollments</a>
-      <a *ngIf="isManager" routerLink="/manager">Manager</a>
-      <a *ngIf="isAdmin" routerLink="/admin">Admin</a>
-      <a *ngIf="!isLoggedIn" routerLink="/login">Login</a>
-      <!-- register removed -->
-      <a *ngIf="isLoggedIn" (click)="logout()" class="link-button">Logout</a>
-    </div>
-  </nav>
-`  ,
-  styles: [`
-    .nav { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid #eee; }
-    .brand { font-weight:700; font-size:18px; margin-right:20px; text-decoration:none; color:#333; }
-    .links a { margin-left:12px; text-decoration:none; color:#007bff; cursor:pointer; }
-    .link-button { cursor:pointer; color:#dc3545; }
-  `]
+  <a routerLink="/" class="brand">TMS</a>
+  <div class="links">
+    <button class="theme-toggle" (click)="toggleTheme()">🌙/☀️</button>
+    <span *ngIf="isLoggedIn" class="greeting">👋 Hello, {{ username }}</span>
+    <a routerLink="/">Home</a>
+    <a *ngIf="isEmployee" routerLink="/employee">Calendar</a>
+    <a *ngIf="isEmployee" routerLink="/my-enrollments">My Enrollments</a>
+    <a *ngIf="isManager" routerLink="/manager">Manager</a>
+    <a *ngIf="isManager" routerLink="/batches">Batches</a>
+    <a *ngIf="isManager" routerLink="/calendar">Calendar</a>
+    <a *ngIf="isManager" routerLink="/enrollment">Enrollments</a>
+    <a *ngIf="isAdmin" routerLink="/admin">Admin</a>
+    <a *ngIf="!isLoggedIn" routerLink="/login">Login</a>
+    <a *ngIf="isLoggedIn" (click)="logout()" class="link-button">Logout</a>
+  </div>
+</nav>
+ `  
 })
 export class NavbarComponent {
-  constructor(public auth: AuthService, private router: Router) {}
+  username: string | null = null;
 
+  constructor(public auth: AuthService, private router: Router) {
+    this.auth.user$.subscribe(user => {
+      this.username = user?.username ?? null;
+    });
+  }
   get isLoggedIn() { return this.auth.isLoggedIn(); }
   get role() { return this.auth.getRole(); }
   get isEmployee() { return this.role === 'Employee'; }
@@ -43,4 +45,7 @@ export class NavbarComponent {
     this.auth.logout();
     this.router.navigate(['/']);
   }
+  toggleTheme() {
+  document.body.classList.toggle('dark-mode');
+}
 }

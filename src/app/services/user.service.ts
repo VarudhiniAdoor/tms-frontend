@@ -26,6 +26,7 @@ export interface EmployeeDto {
   username: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
   manager?: { userId: number; username: string } | null;
   enrollments?: EnrollmentDto[]; 
 }

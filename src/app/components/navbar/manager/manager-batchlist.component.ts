@@ -8,20 +8,34 @@ import { Batch } from '../../../models/domain.models';
   standalone: true,
   imports: [CommonModule],
   template: `
-    <h2>Available Batches</h2>
+ <h2>Available Batches</h2>
     <div *ngIf="loading">Loading batches...</div>
-    <div *ngIf="!loading && batches.length===0">No batches available.</div>
-    <ul *ngIf="!loading">
-      <li *ngFor="let b of batches" class="card">
-        <strong>{{ b.batchName }}</strong> 
-        <div>Course: {{ b.calendar?.course?.courseName }}</div>
-        <div>Start: {{ b.calendar?.startDate | date }}</div>
-        <div>End: {{ b.calendar?.endDate | date }}</div>
-        <div>Enrollments: {{ b.enrollmentCount }}</div><hr>
-      </li>
-    </ul>
+
+    <table *ngIf="!loading && batches.length > 0" class="styled-table">
+      <thead>
+        <tr>
+          <th>Batch</th>
+          <th>Course</th>
+          <th>Start Date</th>
+          <th>End Date</th>
+          <th>Enrollments</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let b of batches">
+          <td>{{ b.batchName }}</td>
+          <td>{{ b.calendar?.course?.courseName || 'N/A' }}</td>
+          <td>{{ b.calendar?.startDate | date:'mediumDate' }}</td>
+          <td>{{ b.calendar?.endDate | date:'mediumDate' }}</td>
+          <td>{{ b.enrollmentCount }}</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div *ngIf="!loading && batches.length === 0">
+      No batches available.
+    </div>
   `
-//  styles: [.card {border:1px solid #ddd; padding:10px; margin:8px 0; border-radius:5px;}]
 })
 export class BatchesListComponent implements OnInit {
   batches: any[] = [];

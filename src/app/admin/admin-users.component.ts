@@ -1,391 +1,186 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CourseService } from '../services/course.service';
-import { BatchService } from '../services/batch.service';
-import { Course } from '../models/domain.models';
-import { FormsModule } from '@angular/forms';
-import { UserService, ManagerDto, CreateUserDto, EmployeeDto} from '../services/user.service';
-import { ReactiveFormsModule, FormControl, FormGroup, Validators } from '@angular/forms';
-import { Batch, EnrollmentDto } from '../models/domain.models';
-import { EnrollmentService } from '../services/enrollment.service';
+import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services/user.service';
+
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, FormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
   template: `
-    <h2>Admin — User Management</h2>
+    <h2>User Management</h2>
 
-    <!-- Manager creation -->
-    <section class="panel">
-      <h3>Register a new Manager</h3>
-      <form [formGroup]="managerForm" (ngSubmit)="createManager()">
-        <input formControlName="username" placeholder="username">
-        <input formControlName="firstName" placeholder="first name">   
-        <input formControlName="lastName" placeholder="last name">
-        <input formControlName="email" placeholder="email">
-        <input formControlName="password" placeholder="password" type="password">
-        <button [disabled]="managerForm.invalid">Create Manager</button>
+    <!-- Add User Button -->
+    <div class="actions">
+      <button (click)="toggleAddForm()">
+        {{ showAddForm ? 'Cancel' : 'Add New User' }}
+      </button>
+    </div>
+
+    <!-- Add User Form -->
+    <div *ngIf="showAddForm" class="form-panel">
+      <form [formGroup]="userForm" (ngSubmit)="createUser()">
+        <input formControlName="username" placeholder="Username">
+        <input formControlName="firstName" placeholder="First name">
+        <input formControlName="lastName" placeholder="Last name">
+        <input formControlName="email" placeholder="Email">
+        <input formControlName="password" type="password" placeholder="Password">
+
+        <select formControlName="roleName" (change)="onRoleChange()">
+          <option value="Manager">Manager</option>
+          <option value="Employee">Employee</option>
+        </select>
+
+        <!-- Manager Dropdown (only if Employee) -->
+        <select *ngIf="userForm.value.roleName === 'Employee'" formControlName="managerId">
+          <option [ngValue]="null">-- Select Manager --</option>
+          <option *ngFor="let m of managers" [ngValue]="m.userId">{{ m.username }}</option>
+        </select>
+
+        <button type="submit" [disabled]="userForm.invalid">Create</button>
       </form>
-      <div *ngIf="managerMsg" class="msg">{{managerMsg}}</div>
-    </section>
+      <div *ngIf="formMsg" class="msg">{{ formMsg }}</div>
+    </div>
 
-    <!-- Manager list -->
-    <section class="panel">
-      <h3>Managers</h3>
-      <div *ngIf="loading">Loading managers...</div>
-      <div *ngFor="let m of managers" class="manager-card">
-        <div class="mgr-header">
-          <strong>{{m.username}}</strong> (ID: {{m.userId}})
-          <small *ngIf="m.email">({{m.email}})</small>
-          <button (click)="toggleCreateFor(m.userId)">Create employee</button>
-          <button (click)="deleteManager(m.userId)">Delete</button> 
-        </div>
+    <!-- Users Table -->
+    <table class="users-table">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Username</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Role</th>
+          <th>Manager</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Managers -->
+        <tr *ngFor="let m of managers">
+          <td>{{ m.userId }}</td>
+          <td>{{ m.username }}</td>
+          <td>{{ m.firstName }} {{ m.lastName }}</td>
+          <td>{{ m.email }}</td>
+          <td>Manager</td>
+          <td>-</td>
+          <td>
+            <button (click)="deleteUser(m.userId)">Delete</button>
+          </td>
+        </tr>
 
-        <div *ngIf="showCreateFor[m.userId]" class="create-employee-form">
-          <form [formGroup]="employeeForms[m.userId]" (ngSubmit)="createEmployee(m.userId)">
-            <input formControlName="username" placeholder="employee username">
-            <input formControlName="firstName" placeholder="first name">  
-            <input formControlName="lastName" placeholder="last name">
-            <input formControlName="email" placeholder="employee email">
-            <input formControlName="password" placeholder="password" type="password">
-            <button [disabled]="employeeForms[m.userId].invalid">Create Employee</button>
-            <button type="button" (click)="cancelCreate(m.userId)">Cancel</button>
-          </form>
-          <div *ngIf="msgMap[m.userId]" class="msg">{{msgMap[m.userId]}}</div>
-        </div>
+        <!-- Employees -->
+        <tr *ngFor="let e of employees">
+          <td>{{ e.userId }}</td>
+          <td>{{ e.username }}</td>
+          <td>{{ e.firstName }} {{ e.lastName }}</td>
+          <td>{{ e.email }}</td>
 
-        <div class="employees-list" *ngIf="m.employees?.length">
-          <em>Employees:</em>
-          <ul>
-            <li *ngFor="let e of m.employees">
-              ID: {{e.userId}}
-              <button (click)="unassignEmployee(e.userId)">Unassign</button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <!-- Employee list -->
-    <section class="panel">
-      <h3>Employees</h3>
-
-      <div>
-        <input type="number" [(ngModel)]="searchId" placeholder="Search by ID">
-        <button (click)="searchEmployee()">Search</button>
-        <button (click)="loadEmployees()">Clear</button>
-      </div>
-
-      <div>
-        <form [formGroup]="unassignedForm" (ngSubmit)="createUnassignedEmployee()">
-          <input formControlName="username" placeholder="username">
-          <input formControlName="firstName" placeholder="first name">
-          <input formControlName="lastName" placeholder="last name">
-          <input formControlName="email" placeholder="email">
-          <input formControlName="password" type="password" placeholder="password">
-          <button [disabled]="unassignedForm.invalid">Create Unassigned Employee</button>
-        </form>
-      </div>
-
-      <ul>
-        <li *ngFor="let e of employees">
-          <div>
-            <strong>ID: {{e.userId}} - {{e.firstName}} {{e.lastName}}</strong>
-            <span *ngIf="e.manager"> (Manager: {{e.manager.username}})</span>
-            <span *ngIf="!e.manager"> (Unassigned)</span>
-            <button (click)="deleteEmployee(e.userId)">Delete</button>
-            <button *ngIf="!e.manager" (click)="startAssign(e.userId)">Assign</button>
-          </div>
-
-          <!-- Assign manager -->
-          <div *ngIf="assigningId === e.userId">
-            <select [(ngModel)]="selectedManagerId">
-              <option *ngFor="let m of managers" [value]="m.userId">{{m.username}}</option>
-            </select>
-            <button (click)="assignEmployee(e.userId, selectedManagerId)">Confirm</button>
-            <button (click)="cancelAssign()">Cancel</button>
-          </div>
-
-          <!-- Enrollments -->
-          <div class="enrollments" *ngIf="e.enrollments?.length">
-            <em>Enrollments:</em>
-            <ul>
-              <li *ngFor="let en of e.enrollments">
-                {{en.courseName}} - {{en.batchName}} → <strong>{{en.status}}</strong>
-                <span *ngIf="en.approvedBy"> (Approved by: {{en.approvedBy}})</span>
-              </li>
-            </ul>
-          </div>
-
-          <!-- Enroll new -->
-          <div>
-            <button (click)="toggleEnroll(e.userId)">Enroll</button>
-            <div *ngIf="enrollingId === e.userId">
-              <select [(ngModel)]="selectedBatchId">
-                <option *ngFor="let b of batches" [value]="b.batchId">
-                  {{b.batchName}} ({{b.calendar?.course?.courseName}})
-                </option>
-              </select>
-              <button (click)="enrollEmployee(e.userId)">Confirm</button>
-              <button (click)="cancelEnroll()">Cancel</button>
-            </div>
-          </div>
-
-        </li>
-      </ul>
-    </section>
+          <td>Employee</td>
+          <td>
+            <span *ngIf="e.manager">{{ e.manager.username }}</span>
+            <span *ngIf="!e.manager">Unassigned</span>
+          </td>
+          <td>
+            <button (click)="deleteUser(e.userId)">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
   `,
   styles: [`
-    .panel{border:1px solid #eee;padding:12px;margin-bottom:14px}
-    input{display:inline-block;margin:6px 6px 6px 0;padding:6px}
-    .manager-card{border-top:1px dashed #ddd;padding:8px 0}
-    .mgr-header{display:flex;gap:10px;align-items:center}
-    .msg{color:green;margin-top:6px}
-    .enrollments{margin-top:6px;font-size:0.9em;color:#444}
+    .actions { margin-bottom: 12px; }
+    .form-panel { border: 1px solid #ccc; padding: 12px; margin-bottom: 16px; }
+    input, select { margin: 6px; padding: 6px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    .msg { color: green; margin-top: 8px; }
   `]
 })
 export class AdminUsersComponent implements OnInit {
   managers: ManagerDto[] = [];
   employees: EmployeeDto[] = [];
-  batches: Batch[] = [];
-  loading = false;
+  showAddForm = false;
+  formMsg = '';
 
-  enrollingId: number | null = null;
-  selectedBatchId: number | null = null;
-
-  managerForm = new FormGroup({
+  userForm = new FormGroup({
     username: new FormControl('', Validators.required),
     firstName: new FormControl(''),
     lastName: new FormControl(''),
     email: new FormControl(''),
-    password: new FormControl('', Validators.required)
+    password: new FormControl('', Validators.required),
+    roleName: new FormControl('Manager', Validators.required),
+    managerId: new FormControl<number | null>(null)
   });
 
-  unassignedForm = new FormGroup({
-    username: new FormControl('', Validators.required),
-    firstName: new FormControl(''),
-    lastName: new FormControl(''),
-    email: new FormControl(''),
-    password: new FormControl('', Validators.required)
-  });
-
-  managerMsg = '';
-  showCreateFor: Record<number, boolean> = {};
-  employeeForms: Record<number, FormGroup> = {};
-  msgMap: Record<number, string> = {};
-  searchId: number | null = null;
-
-  assigningId: number | null = null;
-  selectedManagerId: number | null = null;
-
-  constructor(
-    private userSvc: UserService,
-    private enrollmentSvc: EnrollmentService,
-    private batchSvc: BatchService
-  ) {}
+  constructor(private userSvc: UserService) {}
 
   ngOnInit() {
     this.loadManagers();
     this.loadEmployees();
-    this.loadBatches();
   }
 
-  // --- Managers ---
   loadManagers() {
-    this.loading = true;
     this.userSvc.getManagers().subscribe({
-      next: list => { this.managers = list || []; this.loading = false; },
-      error: err => { console.error(err); this.loading = false; }
+      next: list => this.managers = list,
+      error: err => console.error(err)
     });
   }
 
-  createManager() {
-    const val = this.managerForm.value;
-    const dto: CreateUserDto = {
-      username: val.username!,
-      password: val.password!,
-      email: val.email ?? '',
-      firstName: val.firstName ?? '',
-      lastName: val.lastName ?? '',
-      roleName: 'Manager'
-    };
-    this.userSvc.createUser(dto).subscribe({
-      next: () => {
-        this.managerMsg = 'Manager created';
-        this.managerForm.reset();
-        this.loadManagers();
-      },
-      error: e => this.managerMsg = 'Create failed: ' + (e?.error ?? JSON.stringify(e))
+  loadEmployees() {
+    this.userSvc.getEmployees().subscribe({
+      next: list => this.employees = list,
+      error: err => console.error(err)
     });
   }
 
-  toggleCreateFor(managerId: number) {
-    this.showCreateFor[managerId] = !this.showCreateFor[managerId];
-    if (this.showCreateFor[managerId] && !this.employeeForms[managerId]) {
-      this.employeeForms[managerId] = new FormGroup({
-        username: new FormControl('', Validators.required),
-        firstName: new FormControl(''),
-        lastName: new FormControl(''),
-        email: new FormControl(''),
-        password: new FormControl('', Validators.required)
-      });
+  toggleAddForm() {
+    this.showAddForm = !this.showAddForm;
+    this.formMsg = '';
+    this.userForm.reset({
+      roleName: 'Manager',
+      managerId: null
+    });
+  }
+
+  onRoleChange() {
+    if (this.userForm.value.roleName === 'Manager') {
+      this.userForm.patchValue({ managerId: null });
     }
   }
 
-  cancelCreate(managerId: number) {
-    this.showCreateFor[managerId] = false;
-  }
-
-  createEmployee(managerId: number) {
-    const form = this.employeeForms[managerId];
-    const val = form.value;
+  createUser() {
+    const val = this.userForm.value;
     const dto: CreateUserDto = {
       username: val.username!,
       password: val.password!,
       email: val.email ?? '',
       firstName: val.firstName ?? '',
       lastName: val.lastName ?? '',
-      roleName: 'Employee',
-      managerId
+      roleName: val.roleName!,
+      managerId: val.roleName === 'Employee' ? val.managerId : null
     };
+
     this.userSvc.createUser(dto).subscribe({
       next: () => {
-        this.msgMap[managerId] = 'Employee created';
-        this.employeeForms[managerId].reset();
+        this.formMsg = 'User created successfully';
+        this.toggleAddForm();
         this.loadManagers();
         this.loadEmployees();
       },
-      error: e => this.msgMap[managerId] = 'Create failed: ' + (e?.error ?? JSON.stringify(e))
+      error: e => this.formMsg = 'Create failed: ' + (e?.error ?? JSON.stringify(e))
     });
   }
 
-  deleteManager(managerId: number) {
-    if (!confirm('Are you sure you want to delete this manager?')) return;
-    this.userSvc.deleteUser(managerId).subscribe({
-      next: () => this.loadManagers(),
+  deleteUser(id: number) {
+    if (!confirm('Are you sure you want to delete this user?')) return;
+    this.userSvc.deleteUser(id).subscribe({
+      next: () => {
+        this.loadManagers();
+        this.loadEmployees();
+      },
       error: e => alert('Delete failed: ' + (e?.error ?? JSON.stringify(e)))
-    });
-  }
-
-  // --- Employees ---
-  loadEmployees() {
-    this.userSvc.getEmployees().subscribe({
-      next: list => {
-        this.employees = list;
-        this.employees.forEach(e => {
-          this.enrollmentSvc.getByEmployee(e.userId).subscribe({
-            next: ens => e.enrollments = ens,
-            error: err => console.error(err)
-          });
-        });
-      },
-      error: err => console.error(err)
-    });
-  }
-
-  searchEmployee() {
-    if (!this.searchId) { this.loadEmployees(); return; }
-    this.userSvc.getEmployeeById(this.searchId).subscribe({
-      next: e => {
-        if (e) {
-          this.enrollmentSvc.getByEmployee(e.userId).subscribe({
-            next: ens => e.enrollments = ens,
-            error: err => console.error(err)
-          });
-          this.employees = [e];
-        } else {
-          this.employees = [];
-        }
-      },
-      error: _ => this.employees = []
-    });
-  }
-
-  createUnassignedEmployee() {
-    const val = this.unassignedForm.value;
-    const dto: CreateUserDto = {
-      username: val.username!,
-      password: val.password!,
-      email: val.email ?? '',
-      firstName: val.firstName ?? '',
-      lastName: val.lastName ?? '',
-      roleName: 'Employee',
-      managerId: null
-    };
-    this.userSvc.createUser(dto).subscribe({
-      next: () => {
-        this.unassignedForm.reset();
-        this.loadEmployees();
-      },
-      error: e => alert('Create failed: ' + (e?.error ?? JSON.stringify(e)))
-    });
-  }
-
-  deleteEmployee(employeeId: number) {
-    if (!confirm('Are you sure you want to delete this employee?')) return;
-    this.userSvc.deleteUser(employeeId).subscribe({
-      next: () => this.loadEmployees(),
-      error: e => alert('Delete failed: ' + (e?.error ?? JSON.stringify(e)))
-    });
-  }
-
-  startAssign(employeeId: number) {
-    this.assigningId = employeeId;
-  }
-
-  cancelAssign() {
-    this.assigningId = null;
-    this.selectedManagerId = null;
-  }
-
-  assignEmployee(employeeId: number, managerId: number | null) {
-    if (!managerId) return;
-    this.userSvc.assignEmployee(employeeId, managerId).subscribe({
-      next: () => {
-        this.cancelAssign();
-        this.loadEmployees();
-        this.loadManagers();
-      },
-      error: err => alert('Assign failed: ' + JSON.stringify(err))
-    });
-  }
-
-  unassignEmployee(employeeId: number) {
-    this.userSvc.unassignEmployee(employeeId).subscribe({
-      next: () => {
-        this.loadEmployees();
-        this.loadManagers();
-      },
-      error: err => alert('Unassign failed: ' + JSON.stringify(err))
-    });
-  }
-
-  // --- Enrollments ---
-  loadBatches() {
-    this.batchSvc.getAll().subscribe({
-      next: list => this.batches = list,
-      error: err => console.error(err)
-    });
-  }
-
-  toggleEnroll(employeeId: number) {
-    this.enrollingId = employeeId;
-  }
-
-  cancelEnroll() {
-    this.enrollingId = null;
-    this.selectedBatchId = null;
-  }
-
-  enrollEmployee(employeeId: number) {
-    if (!this.selectedBatchId) return;
-    this.enrollmentSvc.enrollEmployee(employeeId, this.selectedBatchId).subscribe({
-      next: () => {
-        alert('Enrollment successful');
-        this.cancelEnroll();
-        this.loadEmployees();
-      },
-      error: e => alert('Enroll failed: ' + (e?.error ?? JSON.stringify(e)))
     });
   }
 }

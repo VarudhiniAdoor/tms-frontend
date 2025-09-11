@@ -47,4 +47,11 @@ getByBatch(batchId: number) {
   return this.http.get<EnrollmentDto[]>(`${this.baseUrl}/batch/${batchId}`);
 }
 
+getAll(): Observable<EnrollmentDto[]> {
+  return this.http.get<EnrollmentDto[]>(this.baseUrl);
+}
+
+getManaged() {
+  return this.http.get<EnrollmentDto[]>(`${this.baseUrl}/managed`);
+}
 }

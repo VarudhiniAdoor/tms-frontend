@@ -1,67 +1,115 @@
 {
-  "hash": "6c449b72",
-  "configHash": "a31d4c80",
-  "lockfileHash": "25926cd4",
-  "browserHash": "cc71f885",
+  "hash": "748f0a3f",
+  "configHash": "971d262f",
+  "lockfileHash": "6a3fa6f5",
+  "browserHash": "1c170696",
   "optimized": {
+    "@angular/cdk/bidi": {
+      "src": "../../../../../../node_modules/@angular/cdk/fesm2022/bidi.mjs",
+      "file": "@angular_cdk_bidi.js",
+      "fileHash": "bef73e41",
+      "needsInterop": false
+    },
     "@angular/common": {
       "src": "../../../../../../node_modules/@angular/common/fesm2022/common.mjs",
       "file": "@angular_common.js",
-      "fileHash": "83a8aec1",
+      "fileHash": "0555e4eb",
       "needsInterop": false
     },
     "@angular/common/http": {
       "src": "../../../../../../node_modules/@angular/common/fesm2022/http.mjs",
       "file": "@angular_common_http.js",
-      "fileHash": "d8c956de",
+      "fileHash": "64557c92",
       "needsInterop": false
     },
     "@angular/core": {
       "src": "../../../../../../node_modules/@angular/core/fesm2022/core.mjs",
       "file": "@angular_core.js",
-      "fileHash": "172e6d96",
+      "fileHash": "90e1c476",
       "needsInterop": false
     },
     "@angular/forms": {
       "src": "../../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "883c84d7",
+      "fileHash": "712fb353",
+      "needsInterop": false
+    },
+    "@angular/material/table": {
+      "src": "../../../../../../node_modules/@angular/material/fesm2022/table.mjs",
+      "file": "@angular_material_table.js",
+      "fileHash": "ad5560f9",
       "needsInterop": false
     },
     "@angular/platform-browser": {
       "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
       "file": "@angular_platform-browser.js",
-      "fileHash": "f23cb987",
+      "fileHash": "a03b6248",
+      "needsInterop": false
+    },
+    "@angular/platform-browser/animations": {
+      "src": "../../../../../../node_modules/@angular/platform-browser/fesm2022/animations.mjs",
+      "file": "@angular_platform-browser_animations.js",
+      "fileHash": "78d7ed04",
       "needsInterop": false
     },
     "@angular/router": {
       "src": "../../../../../../node_modules/@angular/router/fesm2022/router.mjs",
       "file": "@angular_router.js",
-      "fileHash": "2eabab0b",
+      "fileHash": "f221bea4",
+      "needsInterop": false
+    },
+    "@fortawesome/angular-fontawesome": {
+      "src": "../../../../../../node_modules/@fortawesome/angular-fontawesome/fesm2022/angular-fontawesome.mjs",
+      "file": "@fortawesome_angular-fontawesome.js",
+      "fileHash": "bdb02917",
+      "needsInterop": false
+    },
+    "angular-calendar": {
+      "src": "../../../../../../node_modules/angular-calendar/fesm2022/angular-calendar.mjs",
+      "file": "angular-calendar.js",
+      "fileHash": "5cb58a03",
+      "needsInterop": false
+    },
+    "angular-calendar/date-adapters/date-fns": {
+      "src": "../../../../../../node_modules/angular-calendar/date-adapters/esm/date-fns/index.js",
+      "file": "angular-calendar_date-adapters_date-fns.js",
+      "fileHash": "b42ee5d6",
       "needsInterop": false
     },
     "rxjs": {
       "src": "../../../../../../node_modules/rxjs/dist/esm5/index.js",
       "file": "rxjs.js",
-      "fileHash": "576ef5dc",
+      "fileHash": "f39df312",
       "needsInterop": false
     },
     "rxjs/operators": {
       "src": "../../../../../../node_modules/rxjs/dist/esm5/operators/index.js",
       "file": "rxjs_operators.js",
-      "fileHash": "ebf08e68",
+      "fileHash": "c1f84e77",
       "needsInterop": false
     },
     "zone.js": {
       "src": "../../../../../../node_modules/zone.js/fesm2015/zone.js",
       "file": "zone__js.js",
-      "fileHash": "8be7aeaa",
+      "fileHash": "88770511",
       "needsInterop": true
+    },
+    "@fortawesome/free-solid-svg-icons": {
+      "src": "../../../../../../node_modules/@fortawesome/free-solid-svg-icons/index.mjs",
+      "file": "@fortawesome_free-solid-svg-icons.js",
+      "fileHash": "a42717b7",
+      "needsInterop": false
     }
   },
   "chunks": {
-    "chunk-J6QHPH3M": {
-      "file": "chunk-J6QHPH3M.js"
+    "chunk-MN2GU4AA": {
+      "file": "chunk-MN2GU4AA.js"
+    },
+    "chunk-KGVMWBR4": {
+      "file": "chunk-KGVMWBR4.js"
+    },
+    "chunk-2N2TPNUS": {
+      "file": "chunk-2N2TPNUS.js"
     },
     "chunk-GC66YIDI": {
       "file": "chunk-GC66YIDI.js"

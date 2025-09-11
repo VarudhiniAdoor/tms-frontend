@@ -1,0 +1,45 @@
+<h2>📅 Course Calendar - Manager</h2>
+
+<div *ngIf="loading">Loading calendars...</div>
+
+<div class="calendar">
+  <div class="calendar-header">
+    <button (click)="prevMonth()">‹</button>
+    <h3>{{ currentMonth | date : "MMMM yyyy" }}</h3>
+    <button (click)="nextMonth()">›</button>
+  </div>
+
+  <div class="calendar-grid">
+    <div class="day-name" *ngFor="let d of dayNames">{{ d }}</div>
+
+    <div
+      class="day-cell"
+      *ngFor="let day of monthDays"
+      [class.other-month]="!day.inCurrentMonth"
+      [class.course-day]="getCoursesForDate(day.date).length > 0"
+      (click)="onDateSelected(day.date)"
+    >
+      <span>{{ day.date.getDate() }}</span>
+
+      <!-- Show course dots -->
+      <div class="course-labels" *ngIf="getCoursesForDate(day.date).length > 0">
+        <span
+          class="course-dot"
+          *ngFor="let c of getCoursesForDate(day.date)"
+          [title]="c.course?.courseName + ' (' + (c.batches?.[0]?.batchName || 'No Batch') + ')'">
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="selectedCourses.length > 0" class="course-details">
+  <h3>Courses on {{ selectedDate | date : "mediumDate" }}</h3>
+  <ul>
+    <li *ngFor="let c of selectedCourses">
+      <strong>{{ c.course?.courseName }}</strong>
+      (Batch: {{ c.batches?.[0]?.batchName || 'No Batch' }})<br />
+      <small>{{ c.startDate | date : "shortDate" }} → {{ c.endDate | date : "shortDate" }}</small>
+    </li>
+  </ul>
+</div>

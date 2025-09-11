@@ -1,4 +1,3 @@
-// manager-coursecalendar.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CalendarService } from '../../../services/calendar.service';
@@ -8,58 +7,95 @@ import { CourseCalendar } from '../../../models/domain.models';
   selector: 'app-calendar-list',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="p-6">
-      <h2 class="text-2xl font-bold mb-6 text-gray-800">📅 Course Calendar - Manager</h2>
-
-      
-      <div *ngIf="loading" class="text-gray-500">Loading calendars...</div>
-
-      
-      <div *ngIf="!loading && calendars.length===0" class="text-gray-500">
-        No calendar entries found.
-      </div>
-
-      <!-- List -->
-      <div *ngIf="!loading && calendars.length>0" class="space-y-6">
-        <div *ngFor="let c of calendars"
-          class="bg-white border-l-4 border-blue-500 rounded-xl shadow-sm p-5 flex justify-between items-center hover:shadow-lg transition">
-
-          <!-- Left section -->
-          <div>
-            <h3 class="text-lg font-semibold text-gray-900 mb-1">
-              {{c.course?.courseName || 'Unnamed Course'}}
-            </h3>
-            <p class="text-xs text-gray-500">Course ID: {{c.courseId}}</p>
-          </div>
-
-          <!-- Right section -->
-          <div class="text-sm text-gray-700">
-            <p class="flex items-center gap-2">
-              <span class="font-medium text-blue-600">Start:</span>
-              {{c.startDate | date:'mediumDate'}}
-            </p>
-            <p class="flex items-center gap-2">
-              <span class="font-medium text-red-600">End:</span>
-              {{c.endDate | date:'mediumDate'}}
-            </p><hr>
-          </div>
-        </div>
-      </div>
-    </div>
-  `
+  templateUrl: './manager-coursecalendar.component.html',
+  styleUrls: ['./manager-coursecalendar.component.css']
 })
 export class CalendarListComponent implements OnInit {
   calendars: CourseCalendar[] = [];
   loading = false;
+
+  currentMonth: Date = new Date();
+  dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  monthDays: { date: Date; inCurrentMonth: boolean }[] = [];
+
+  selectedDate: Date | null = null;
+  selectedCourses: CourseCalendar[] = [];
+
+  // Map date string → courses
+  dateCourseMap: { [key: string]: CourseCalendar[] } = {};
 
   constructor(private calSvc: CalendarService) {}
 
   ngOnInit() {
     this.loading = true;
     this.calSvc.getAll().subscribe({
-      next: data => { this.calendars = data; this.loading = false; },
-      error: () => { this.calendars = []; this.loading = false; }
+      next: data => {
+        this.calendars = data;
+        this.loading = false;
+        this.generateCalendar();
+      },
+      error: () => {
+        this.calendars = [];
+        this.loading = false;
+        this.generateCalendar();
+      }
     });
+  }
+
+  generateCalendar() {
+    const start = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), 1);
+    const end = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 0);
+
+    const days: { date: Date; inCurrentMonth: boolean }[] = [];
+
+    // Previous month days
+    const prevDays = start.getDay();
+    for (let i = prevDays; i > 0; i--) {
+      const d = new Date(start);
+      d.setDate(d.getDate() - i);
+      days.push({ date: d, inCurrentMonth: false });
+    }
+
+    // Current month days
+    for (let i = 1; i <= end.getDate(); i++) {
+      days.push({ date: new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth(), i), inCurrentMonth: true });
+    }
+
+    // Next month padding to complete grid
+    const nextDays = 42 - days.length;
+    for (let i = 1; i <= nextDays; i++) {
+      const d = new Date(end);
+      d.setDate(d.getDate() + i);
+      days.push({ date: d, inCurrentMonth: false });
+    }
+
+    this.monthDays = days;
+
+    // Build dateCourseMap
+    this.dateCourseMap = {};
+    for (const c of this.calendars) {
+      const key = new Date(c.startDate).toDateString();
+      if (!this.dateCourseMap[key]) this.dateCourseMap[key] = [];
+      this.dateCourseMap[key].push(c);
+    }
+  }
+
+  getCoursesForDate(date: Date): CourseCalendar[] {
+    return this.dateCourseMap[date.toDateString()] || [];
+  }
+
+  prevMonth() {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() - 1, 1);
+    this.generateCalendar();
+  }
+
+  nextMonth() {
+    this.currentMonth = new Date(this.currentMonth.getFullYear(), this.currentMonth.getMonth() + 1, 1);
+    this.generateCalendar();
+  }
+
+  onDateSelected(date: Date) {
+    this.selectedDate = date;
+    this.selectedCourses = this.getCoursesForDate(date);
   }
 }
