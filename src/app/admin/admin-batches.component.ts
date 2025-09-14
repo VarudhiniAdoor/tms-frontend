@@ -1,30 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; 
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { BatchService } from '../services/batch.service';
 import { CourseService } from '../services/course.service';
 import { CalendarService } from '../services/calendar.service';
 import { FeedbackService } from '../services/feedback.service';
-import { Course, CourseCalendar, Batch, EnrollmentDto  } from '../models/domain.models';
+import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.models';
 
 @Component({
   selector: 'app-admin-calendar',
-    standalone: true,  
-  imports: [        
-    CommonModule,
-    FormsModule,
-    ReactiveFormsModule
-  ],
-
-  templateUrl: './admin-calendar.component.html',
+  standalone: true,  
+  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  templateUrl: './admin-batches.component.html',
   styles: [`
     .panel { border:1px solid #eee; padding:12px; margin-bottom:14px; }
-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-th { background: #f4f4f4; }
-button { margin: 2px; }
-`]
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background: #f4f4f4; }
+    button { margin: 2px; }
+  `]
 })
 export class AdminCalendarComponent implements OnInit {
   courses: Course[] = [];
@@ -37,6 +31,7 @@ export class AdminCalendarComponent implements OnInit {
 
   searchId = '';
   showCreateForm = false;
+  editingBatchId: number | null = null;
   batchForm!: FormGroup;
 
   constructor(
@@ -56,7 +51,6 @@ export class AdminCalendarComponent implements OnInit {
     this.loadData();
   }
 
-  // Load courses, calendars, batches, feedbacks
   loadData() {
     this.courseSvc.getAll().subscribe(c => this.courses = c);
     this.calSvc.getAll().subscribe(cals => this.calendars = cals);
@@ -67,11 +61,23 @@ export class AdminCalendarComponent implements OnInit {
     this.feedbackSvc.getAll().subscribe(f => this.feedbacks = f);
   }
 
-  toggleCreateForm() {
+  toggleCreateForm(batch?: Batch) {
     this.showCreateForm = !this.showCreateForm;
+
+    if (batch) {
+      // Edit mode
+      this.editingBatchId = batch.batchId;
+      this.batchForm.patchValue({
+        batchName: batch.batchName,
+        calendarId: batch.calendarId
+      });
+    } else {
+      // Create mode
+      this.editingBatchId = null;
+      this.batchForm.reset();
+    }
   }
 
-  // Create new batch
   submitBatch() {
     if (this.batchForm.invalid) return;
 
@@ -79,45 +85,66 @@ export class AdminCalendarComponent implements OnInit {
     const calendar = this.calendars.find(c => c.calendarId == calendarId);
     if (!calendar) return;
 
-    // Auto-calculate end date based on duration (excluding weekends)
+    // Calculate end date (skip weekends) for display
     const startDate = new Date(calendar.startDate);
     let daysLeft = calendar.course?.durationDays ?? 0;
     let current = new Date(startDate);
     while (daysLeft > 0) {
       current.setDate(current.getDate() + 1);
-      if (current.getDay() !== 0 && current.getDay() !== 6) daysLeft--; // skip weekends
+      if (current.getDay() !== 0 && current.getDay() !== 6) daysLeft--;
     }
     const endDate = current.toISOString().split('T')[0];
 
-    this.batchSvc.create({ batchName, calendarId }).subscribe(() => {
-      alert(`Batch created! Duration: ${calendar.startDate} - ${endDate}`);
-      this.loadData();
-      this.batchForm.reset();
-      this.showCreateForm = false;
-    });
+    if (this.editingBatchId) {
+      // Update existing batch
+      const existingBatch = this.activeBatches.find(b => b.batchId === this.editingBatchId);
+      if (!existingBatch) return;
+
+      const updatedBatch: Batch = {
+        ...existingBatch,
+        batchName,
+        calendarId,
+        calendar: calendar
+      };
+
+      this.batchSvc.update(this.editingBatchId, updatedBatch).subscribe(() => {
+        alert(`Batch updated! Duration: ${calendar.startDate} - ${endDate}`);
+        this.loadData();
+        this.showCreateForm = false;
+      });
+
+    } else {
+      // Create new batch
+      const newBatch: Partial<Batch> = { batchName, calendarId };
+      this.batchSvc.create(newBatch).subscribe(() => {
+        alert(`Batch created! Duration: ${calendar.startDate} - ${endDate}`);
+        this.loadData();
+        this.showCreateForm = false;
+      });
+    }
   }
 
-  // Delete batch
   deleteBatch(batchId: number) {
     if (!confirm('Delete this batch?')) return;
     this.batchSvc.delete(batchId).subscribe(() => this.loadData());
   }
 
-  // Show enrollments for selected batch
   showEnrollments(batchId: number) {
     this.selectedBatchId = batchId;
     this.batchSvc.getEnrollments(batchId).subscribe(data => this.selectedEnrollments = data);
   }
 
-  // Search batch by ID
-  onSearch() {
-    const id = Number(this.searchId);
-    if (!id) return;
-    this.batchSvc.get(id).subscribe(batch => this.activeBatches = batch ? [batch] : []);
+ onSearch() {
+  const searchTerm = this.searchId.trim().toLowerCase();
+  if (!searchTerm) {
+    // If search is empty, show all active batches
+    this.activeBatches = this.batches.filter(b => b.isActive);
+    return;
   }
 
-  // Search feedback for a batch
-  searchFeedbackByBatch(batchId: number) {
-    this.feedbackSvc.getForBatch(batchId).subscribe(data => this.feedbacks = data);
-  }
+  this.activeBatches = this.batches.filter(b =>
+    b.batchName?.toLowerCase().includes(searchTerm)
+  );
+}
+
 }

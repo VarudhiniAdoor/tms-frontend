@@ -1,0 +1,93 @@
+/* Hero Section */
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+  background: linear-gradient(135deg, #708993, #A1C2BD);
+  color: #fff;
+  overflow: hidden;
+}
+
+.hero h1 {
+  font-size: 42px;
+  margin-bottom: 16px;
+  animation: fadeInDown 1.2s ease;
+}
+
+.hero p {
+  font-size: 18px;
+  margin-bottom: 30px;
+  max-width: 650px;
+  margin-left: auto;
+  margin-right: auto;
+  animation: fadeIn 1.5s ease;
+}
+
+.cta {
+  text-decoration: none;
+  background: #E7F2EF;
+  color: #19183B;
+  padding: 14px 30px;
+  border-radius: 25px;
+  font-weight: 600;
+  transition: transform 0.3s ease, background 0.3s ease;
+}
+
+.cta:hover {
+  transform: scale(1.08);
+  background: #ffdd57;
+  color: #19183B;
+}
+
+/* Sections */
+.section {
+  padding: 60px 20px;
+  max-width: 900px;
+  margin: auto;
+  text-align: center;
+}
+
+/* Team */
+.team {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.team-member {
+  background: var(--light-card);
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+body.dark-mode .team-member {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+
+.team-member:hover {
+  transform: translateY(-8px) scale(1.05);
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 1.2s ease forwards;
+}
+.slide-up {
+  animation: slideUp 1.2s ease forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes fadeInDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}

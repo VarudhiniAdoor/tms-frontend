@@ -1,0 +1,19 @@
+.footer {
+  background: var(--light-card);
+  text-align: center;
+  padding: 16px;
+  color: var(--light-text);
+  transition: background var(--transition-speed), color var(--transition-speed);
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);
+}
+
+body.dark-mode .footer {
+  background: var(--dark-card);
+  color: var(--dark-text);
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.3);
+}

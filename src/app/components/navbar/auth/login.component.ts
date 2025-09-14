@@ -12,7 +12,9 @@ import { AuthService } from '../../../core/auth.service';
 <div class="login-wrapper">
       <!-- Left side illustration -->
       <div class="login-image">
-        <img src="src/assets/img4.gif" alt="Login GIF">
+        <img [src]="isDarkMode ? './assets/img4_dark.gif' : './assets/img4_light.gif'" alt="Login GIF">
+
+
       </div>
 
       <!-- Right side login form -->
@@ -41,8 +43,9 @@ export class LoginComponent {
     password: new FormControl('', Validators.required)
   });
   error?: string;
-
-  constructor(private auth: AuthService, private router: Router) {}
+  isDarkMode = false;
+  
+  constructor(private auth: AuthService, private router: Router) {this.isDarkMode = document.body.classList.contains('dark-mode');}
 
   submit() {
     this.error = undefined;

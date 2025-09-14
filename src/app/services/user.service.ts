@@ -68,4 +68,8 @@ getEmployeeById(id: number): Observable<EmployeeDto> {
   return this.http.get<EmployeeDto>(`${this.apiUrl}/users/employee/${id}`);
 }
 
+updateUser(userId: number, dto: CreateUserDto) {
+  return this.http.put(`${this.apiUrl}/users/${userId}`, dto);
+}
+
 }

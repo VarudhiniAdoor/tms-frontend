@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AdminUsersComponent } from './admin-users.component';
 import { AdminCoursesComponent } from './admin-courses.component';
-import { AdminCalendarComponent } from './admin-calendar.component';
+import { AdminCalendarComponent } from './admin-batches.component';
 import { AdminEnrollmentsComponent } from './admin-enrollments.component';
 import { AdminFeedbackComponent } from './admin-feedback.component';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -24,7 +24,7 @@ import { faUsers, faBook, faCalendarAlt, faClipboardList, faChartBar } from '@fo
   <div class="admin-container">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <h2>Admin Panel</h2>
+      <h2>Admin Dashboard</h2>
       <nav>
         <button (click)="tab='users'" [class.active]="tab==='users'">
   <fa-icon [icon]="faUsers"></fa-icon> Users

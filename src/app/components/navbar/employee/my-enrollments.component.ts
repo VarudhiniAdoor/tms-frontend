@@ -10,26 +10,42 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
   template: `
-    <h2>My Enrollments</h2>
-    <div *ngIf="enrollments.length===0">No enrollments found (or the backend endpoint is missing).</div>
-    <div *ngFor="let e of enrollments" class="card">
-      <div><strong>{{e.courseName}}</strong> — {{e.batchName}}</div>
-      <div>Status: {{e.status}} | Approved By: {{e.approvedBy ?? '—'}}</div>
+  <h2>My Enrollments</h2>
+  <div *ngIf="enrollments.length===0">
+    No enrollments found (or the backend endpoint is missing).
+  </div>
 
-      <div *ngIf="canGiveFeedback(e)">
-        <h4>Give feedback</h4>
-        <textarea [formControl]="feedbackText" placeholder="Feedback"></textarea>
-        <div>
-          Rating:
-          <select [formControl]="rating">
-            <option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{r}}</option>
-          </select>
-        </div>
-        <button (click)="submitFeedback(e)">Submit feedback</button>
-      </div>
+  <div *ngFor="let e of enrollments" class="card">
+    <div><strong>{{e.courseName}}</strong> — {{e.batchName}}</div>
+    <div>Status: {{e.status}} | Approved By: {{e.approvedBy ?? '—'}}</div>
+
+    <!-- 🔹 Show rejection reason if present -->
+    <div *ngIf="e.status==='Rejected' && e.rejectReason">
+      <span class="reason-label">Reason: </span>
+      <span class="reason-text">{{e.rejectReason}}</span>
     </div>
-  `,
-  styles: [`.card { border:1px solid #eee; padding:12px; margin:8px 0; } textarea{ width:100%; min-height:70px; }`]
+
+    <!-- 🔹 Feedback form (only for approved) -->
+    <div *ngIf="canGiveFeedback(e)">
+      <h4>Give feedback</h4>
+      <textarea [formControl]="feedbackText" placeholder="Feedback"></textarea>
+      <div>
+        Rating:
+        <select [formControl]="rating">
+          <option *ngFor="let r of [1,2,3,4,5]" [value]="r">{{r}}</option>
+        </select>
+      </div>
+      <button (click)="submitFeedback(e)">Submit feedback</button>
+    </div>
+  </div>
+`,
+styles: [`
+  .card { border:1px solid #eee; padding:12px; margin:8px 0; }
+  textarea{ width:100%; min-height:70px; }
+  .reason-label { font-weight:bold; color:#b00; }
+  .reason-text { color:#900; }
+`]
+
 })
 export class MyEnrollmentsComponent implements OnInit {
   enrollments: EnrollmentDto[] = [];
@@ -48,7 +64,7 @@ export class MyEnrollmentsComponent implements OnInit {
     return e.status === 'Approved';
   }
 
-  submitFeedback(e: EnrollmentDto) {
+submitFeedback(e: EnrollmentDto) {
   const dto = {
     text: this.feedbackText.value ?? '',
     rating: this.rating.value ?? 5
@@ -61,9 +77,13 @@ export class MyEnrollmentsComponent implements OnInit {
       this.rating.setValue(5);
     },
     error: err => {
-      console.error(err);
-      alert('Failed to submit feedback: ' + (err?.error ?? 'Unknown error'));
+      if (err?.error?.toString().includes("after the batch has finished")) {
+        alert("⚠️ Feedback not allowed until this batch finishes.");
+      } else {
+        alert('Failed to submit feedback: ' + (err?.error ?? 'Unknown error'));
+      }
     }
   });
 }
+
 }

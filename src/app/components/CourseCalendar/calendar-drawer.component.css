@@ -1,0 +1,53 @@
+/* Drawer backdrop */
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  z-index: 998;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+/* Drawer panel */
+.drawer {
+  position: fixed;
+  top: 60px; /* Adjust this to your navbar height */
+  right: -420px; /* hidden initially */
+  width: 400px;
+  height: calc(100% - 70px); /* full height minus navbar */
+  background: var(--light-card);
+  border-radius: 15px 0 0 15px;
+  box-shadow: -5px 5px 20px rgba(0,0,0,0.2);
+  z-index: 999;
+  overflow-y: auto;
+  transition: right 0.4s ease, transform 0.4s ease;
+  transform: translateX(0);
+}
+
+/* Slide in */
+.drawer.open {
+  right: 0;
+  transform: translateX(0);
+}
+
+/* Close button */
+.close-btn {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: var(--dark-text);
+}
+
+/* Floating hover effect */
+.drawer:hover {
+  transform: translateX(-5px);
+}
+
+/* Backdrop fade-in */
+@keyframes fadeIn {
+  to { opacity: 1; }
+}

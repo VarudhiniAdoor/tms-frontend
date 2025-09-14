@@ -12,7 +12,6 @@ export interface CourseCalendar {
   courseId: number;
   startDate: string;
   endDate: string;
-  //courseName: string;
   // backend currently marks Course as JsonIgnored on CourseCalendar; when you return the calendar in other endpoints (batches) it's populated
   course?: Course;
   batches?: Batch[];
@@ -36,6 +35,7 @@ export interface EnrollmentDto {
   batchName: string;
   status: string;
   approvedBy?: string | null;
+  rejectReason? : string;
 }
 
 export interface FeedbackCreateDto {

@@ -1,0 +1,110 @@
+.calendar {
+  width: 100%;
+  max-width: 100%; /* fits nicely inside manager page */
+  margin: 0 auto;
+  border: 1px solid var(--dark-card);
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  background: var(--light-bg);
+  color: var(--light-text);
+}
+
+/* Header */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--dark-bg);
+  color: var(--dark-text);
+  padding: 10px;
+  border-radius: 12px 12px 0 0;
+}
+
+.calendar-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Grid */
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+  padding: 8px;
+}
+
+.day-name {
+  text-align: center;
+  font-weight: bold;
+  padding: 4px 0;
+  font-size: 13px;
+  background: var(--light-card);
+  border-radius: 6px;
+}
+
+.day-cell {
+  height: 80px; /* reduced height */
+  padding: 4px;
+  height: auto;
+  border-radius: 6px;
+  cursor: pointer;
+  background: var(--light-bg);
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden; /* prevent overflow */
+}
+
+.day-cell.other-month {
+  color: #bbb;
+}
+
+.day-cell.course-day {
+  background-color: var(--light-card);
+  border: 1px solid var(--dark-card);
+}
+
+.day-cell:hover {
+  background: var(--dark-card);
+  color: var(--dark-text);
+}
+
+.day-number {
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Compact course labels */
+.course-labels {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: auto;
+  max-height: 45px;
+  overflow-y: auto;
+  width: 100%;
+}
+
+.course-label {
+  background: var(--dark-card);
+  color: var(--dark-text);
+  padding: 1px 3px;
+  border-radius: 4px;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Floating details box */
+.course-details.floating-box {
+  margin: 15px auto;
+  padding: 12px;
+  max-width: 850px;
+  border-radius: 10px;
+  background: var(--light-card);
+  color: var(--light-text);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  font-size: 14px;
+}

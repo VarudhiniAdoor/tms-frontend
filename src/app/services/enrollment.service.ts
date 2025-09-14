@@ -28,10 +28,16 @@ export class EnrollmentService {
   approve(id: number) {
     return this.http.post(`${this.baseUrl}/${id}/approve`, null);
   }
+reject(id: number, reason?: string) {
+  return this.http.post(
+    `${this.baseUrl}/${id}/reject`,
+    { reason: reason || null },
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+}
 
-  reject(id: number) {
-    return this.http.post(`${this.baseUrl}/${id}/reject`, null);
-  }
+
+
 
   getPending() {
     return this.http.get<EnrollmentDto[]>(`${this.baseUrl}/pending`);

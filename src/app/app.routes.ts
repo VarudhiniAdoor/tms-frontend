@@ -9,14 +9,13 @@ import { AdminUsersComponent } from './admin/admin-users.component';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleGuard } from './guards/role.guard';
 import { BatchesListComponent } from './components/navbar/manager/manager-batchlist.component';
-import { CalendarListComponent } from './components/navbar/manager/manager-coursecalandar.component';
+import { CalendarListComponent } from './components/CourseCalendar/manager-coursecalandar.component';
 import { EnrollmentComponent } from './components/navbar/manager/manager-enrollment.component';
 
 export const routes: Routes = [
   { path: '', component: HomeComponent },
   { path: 'login', component: LoginComponent },
   
-
   {
     path: 'employee',
     component: EmployeeDashboardComponent,
@@ -43,13 +42,13 @@ export const routes: Routes = [
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['Manager'] }
   },
-    {
+  {
     path: 'calendar',
     component: CalendarListComponent,
     canActivate: [AuthGuard, RoleGuard],
     data: { roles: ['Manager'] }
   },
-    {
+  {
     path: 'enrollment',
     component: EnrollmentComponent,
     canActivate: [AuthGuard, RoleGuard],
@@ -62,6 +61,5 @@ export const routes: Routes = [
     data: { roles: ['Administrator'] }
   },
 
-  // fallback
   { path: '**', redirectTo: '' }
 ];

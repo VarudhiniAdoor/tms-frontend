@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { AuthService } from '../../../core/auth.service';
+import { CalendarDrawerService } from '../../../services/calendar-drawer.service';
 
 @Component({
   selector: 'app-navbar',
@@ -11,17 +12,12 @@ import { AuthService } from '../../../core/auth.service';
   <nav class="nav">
   <a routerLink="/" class="brand">TMS</a>
   <div class="links">
-    <button class="theme-toggle" (click)="toggleTheme()">🌙/☀️</button>
+    <button class="theme-toggle" (click)="toggleTheme()"></button>
     <span *ngIf="isLoggedIn" class="greeting">👋 Hello, {{ username }}</span>
-    <a routerLink="/">Home</a>
-    <a *ngIf="isEmployee" routerLink="/employee">Calendar</a>
-    <a *ngIf="isEmployee" routerLink="/my-enrollments">My Enrollments</a>
-    <a *ngIf="isManager" routerLink="/manager">Manager</a>
-    <a *ngIf="isManager" routerLink="/batches">Batches</a>
-    <a *ngIf="isManager" routerLink="/calendar">Calendar</a>
-    <a *ngIf="isManager" routerLink="/enrollment">Enrollments</a>
-    <a *ngIf="isAdmin" routerLink="/admin">Admin</a>
+    
+    
     <a *ngIf="!isLoggedIn" routerLink="/login">Login</a>
+    <a *ngIf="isLoggedIn" (click)="openCalendar()" class="link-button">Course Calendar</a>
     <a *ngIf="isLoggedIn" (click)="logout()" class="link-button">Logout</a>
   </div>
 </nav>
@@ -30,7 +26,7 @@ import { AuthService } from '../../../core/auth.service';
 export class NavbarComponent {
   username: string | null = null;
 
-  constructor(public auth: AuthService, private router: Router) {
+  constructor(public auth: AuthService, private router: Router, private drawer: CalendarDrawerService) {
     this.auth.user$.subscribe(user => {
       this.username = user?.username ?? null;
     });
@@ -48,4 +44,13 @@ export class NavbarComponent {
   toggleTheme() {
   document.body.classList.toggle('dark-mode');
 }
+openCalendar() {
+  this.drawer.open(); // triggers the drawer to open
 }
+}
+
+
+
+    // <a *ngIf="isEmployee" routerLink="/employee"> Employee</a>
+    // <a *ngIf="isManager" routerLink="/manager">Manager</a>
+    // <a *ngIf="isAdmin" routerLink="/admin">Admin</a>

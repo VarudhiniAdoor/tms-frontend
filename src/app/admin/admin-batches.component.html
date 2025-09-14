@@ -7,7 +7,7 @@
   <button (click)="toggleCreateForm()">➕ Create Batch</button>
 </section>
 
-<!-- Create Batch Form -->
+<!-- Create/Edit Batch Form -->
 <section *ngIf="showCreateForm" class="panel">
   <form [formGroup]="batchForm" (ngSubmit)="submitBatch()">
     <label>
@@ -22,7 +22,9 @@
       Batch Name:
       <input type="text" formControlName="batchName"/>
     </label>
-    <button type="submit" [disabled]="batchForm.invalid">Create</button>
+    <button type="submit" [disabled]="batchForm.invalid">
+      {{ editingBatchId ? 'Update Batch' : 'Create Batch' }}
+    </button>
     <button type="button" (click)="toggleCreateForm()">Cancel</button>
   </form>
 </section>
@@ -46,13 +48,12 @@
         <td>{{b.calendar?.course?.courseName}}</td>
         <td>{{b.calendar?.startDate | date}}</td>
         <td>{{b.calendar?.endDate | date}}</td>
-        <td><button (click)="deleteBatch(b.batchId)">🗑️</button></td>
+        <td>
+          <button (click)="toggleCreateForm(b)">✏️ Edit</button>
+          <button (click)="deleteBatch(b.batchId)">🗑️</button>
+        </td>
       </tr>
     </tbody>
   </table>
   <ng-template #noActive><em>No active batches</em></ng-template>
 </section>
-
-
-
-
