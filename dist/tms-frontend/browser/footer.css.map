@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["src/app/shared/footer/footer.css"],
+  "sourcesContent": [".footer {\r\n  background: var(--light-card);\r\n  text-align: center;\r\n  padding: 16px;\r\n  color: var(--light-text);\r\n  transition: background var(--transition-speed), color var(--transition-speed);\r\n\r\n  position: fixed;\r\n  bottom: 0;\r\n  left: 0;\r\n  width: 100%;\r\n  box-shadow: 0 -2px 6px rgba(0,0,0,0.1);\r\n}\r\n\r\nbody.dark-mode .footer {\r\n  background: var(--dark-card);\r\n  color: var(--dark-text);\r\n  box-shadow: 0 -2px 6px rgba(0,0,0,0.3);\r\n}\r\n"],
+  "mappings": ";AAAA,CAAC;AACC,cAAY,IAAI;AAChB,cAAY;AACZ,WAAS;AACT,SAAO,IAAI;AACX,cAAY,WAAW,IAAI,mBAAmB,EAAE,MAAM,IAAI;AAE1D,YAAU;AACV,UAAQ;AACR,QAAM;AACN,SAAO;AACP,cAAY,EAAE,KAAK,IAAI,KAAK,CAAC,EAAC,CAAC,EAAC,CAAC,EAAC;AACpC;AAEA,IAAI,CAAC,UAAU,CAdd;AAeC,cAAY,IAAI;AAChB,SAAO,IAAI;AACX,cAAY,EAAE,KAAK,IAAI,KAAK,CAAC,EAAC,CAAC,EAAC,CAAC,EAAC;AACpC;",
+  "names": []
+}

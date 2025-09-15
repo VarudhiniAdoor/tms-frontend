@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 import { CalendarService } from '../../services/calendar.service';
 import { CourseCalendar } from '../../models/domain.models';
 import { BatchService } from '../../services/batch.service';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { faChevronLeft, faChevronRight, faBook, faUsers, faClock, faMapPin, faCalendarAlt, faGraduationCap } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-calendar-list',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FontAwesomeModule],
   templateUrl: './manager-coursecalendar.component.html',
   styleUrls: ['./manager-coursecalendar.component.css']
 })
@@ -25,6 +27,16 @@ export class CalendarListComponent implements OnInit {
   // Map date string → courses
   dateCourseMap: { [key: string]: CourseCalendar[] } = {};
 
+  // FontAwesome Icons
+  faChevronLeft = faChevronLeft;
+  faChevronRight = faChevronRight;
+  faBook = faBook;
+  faUsers = faUsers;
+  faClock = faClock;
+  faMapPin = faMapPin;
+  faCalendarAlt = faCalendarAlt;
+  faGraduationCap = faGraduationCap;
+
   constructor(private calSvc: CalendarService, private batchSvc: BatchService) {}
 
   ngOnInit() {
@@ -32,10 +44,12 @@ export class CalendarListComponent implements OnInit {
     this.calSvc.getAll().subscribe({
       next: data => {
         this.calendars = data;
+        console.log('Loaded calendars:', this.calendars);
         this.loading = false;
         this.generateCalendar();
       },
-      error: () => {
+      error: (err) => {
+        console.error('Error loading calendars:', err);
         this.calendars = [];
         this.loading = false;
         this.generateCalendar();
@@ -82,7 +96,11 @@ export class CalendarListComponent implements OnInit {
   }
 
   getCoursesForDate(date: Date): CourseCalendar[] {
-    return this.dateCourseMap[date.toDateString()] || [];
+    const courses = this.dateCourseMap[date.toDateString()] || [];
+    if (courses.length > 0) {
+      console.log(`Courses for ${date.toDateString()}:`, courses);
+    }
+    return courses;
   }
 
   prevMonth() {

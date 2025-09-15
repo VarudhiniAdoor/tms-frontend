@@ -19,8 +19,7 @@ import {
   withI18nSupport,
   withIncrementalHydration,
   withNoHttpTransferCache
-} from "./chunk-HJUZCVUV.js";
-import "./chunk-GC66YIDI.js";
+} from "./chunk-KGVMWBR4.js";
 import {
   BrowserDomAdapter,
   BrowserGetTestability,
@@ -38,6 +37,7 @@ import {
   platformBrowser,
   provideProtractorTestingSupport
 } from "./chunk-2N2TPNUS.js";
+import "./chunk-GC66YIDI.js";
 import {
   getDOM
 } from "./chunk-IDU4EOZP.js";

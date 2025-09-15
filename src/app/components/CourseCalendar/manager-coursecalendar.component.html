@@ -1,14 +1,27 @@
-<h2>📅 Course Calendar </h2>
+<!-- Loading State -->
+<div class="loading-container" *ngIf="loading">
+  <div class="loading-spinner">
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
+    <div class="spinner-ring"></div>
+  </div>
+  <p>Loading calendar...</p>
+</div>
 
-<div *ngIf="loading">Loading calendars...</div>
-
-<div class="calendar">
+<!-- Calendar Container -->
+<div class="calendar-container" *ngIf="!loading">
+  <!-- Calendar Header -->
   <div class="calendar-header">
-    <button (click)="prevMonth()">‹</button>
-    <h3>{{ currentMonth | date : "MMMM yyyy" }}</h3>
-    <button (click)="nextMonth()">›</button>
+    <button class="nav-btn" (click)="prevMonth()">
+      <fa-icon [icon]="faChevronLeft"></fa-icon>
+    </button>
+    <h3 class="month-title">{{ currentMonth | date : "MMMM yyyy" }}</h3>
+    <button class="nav-btn" (click)="nextMonth()">
+      <fa-icon [icon]="faChevronRight"></fa-icon>
+    </button>
   </div>
 
+  <!-- Calendar Grid -->
   <div class="calendar-grid">
     <div class="day-name" *ngFor="let d of dayNames">{{ d }}</div>
 
@@ -17,45 +30,82 @@
       *ngFor="let day of monthDays"
       [class.other-month]="!day.inCurrentMonth"
       [class.course-day]="getCoursesForDate(day.date).length > 0"
+      [class.selected]="selectedDate && day.date.toDateString() === selectedDate.toDateString()"
       (click)="onDateSelected(day.date)"
     >
       <span class="day-number">{{ day.date.getDate() }}</span>
 
-      <!-- Show course labels -->
-      <div class="course-labels" *ngIf="getCoursesForDate(day.date).length > 0">
-        <span
-          class="course-label"
-          *ngFor="let c of getCoursesForDate(day.date)"
-          [title]="c.course?.courseName + ' (' + (c.batches?.[0]?.batchName || 'No Batch') + ')'">
-          {{ c.course?.courseName }}
-        </span>
+      <!-- Course indicators -->
+      <div class="course-indicators" *ngIf="getCoursesForDate(day.date).length > 0">
+        <div class="course-dot" *ngFor="let c of getCoursesForDate(day.date)"></div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Always visible details (not pushed down) -->
-<!-- course details at bottom -->
-<div *ngIf="selectedCourses.length > 0" class="course-details floating-box">
-  <h3>📖 Courses on {{ selectedDate | date : "mediumDate" }}</h3>
-  <ul>
-    <li *ngFor="let c of selectedCourses">
-      <strong>{{ c.course?.courseName }}</strong>
+<!-- Course Details Panel -->
+<div class="course-details-panel" *ngIf="selectedCourses.length > 0">
+  <div class="details-header">
+    <fa-icon [icon]="faCalendarAlt" class="details-icon"></fa-icon>
+    <h3>Courses on {{ selectedDate | date : "mediumDate" }}</h3>
+  </div>
+  
+  <div class="course-list">
+    <div class="course-item" *ngFor="let c of selectedCourses">
+      <div class="course-header">
+        <div class="course-icon">
+          <fa-icon [icon]="faBook"></fa-icon>
+        </div>
+        <div class="course-info">
+          <h4 class="course-name">{{ c.course?.courseName || 'Unknown Course' }}</h4>
+          <p class="course-duration">
+            <fa-icon [icon]="faClock"></fa-icon>
+            {{ c.course?.durationDays || 0 }} days
+          </p>
+        </div>
+      </div>
+      
+      <div class="course-description" *ngIf="c.course?.description">
+        <p>{{ c.course?.description }}</p>
+      </div>
+      
+      <div class="course-dates">
+        <div class="date-range">
+          <fa-icon [icon]="faCalendarAlt"></fa-icon>
+          <span>{{ c.startDate | date:'MMM dd' }} - {{ c.endDate | date:'MMM dd, yyyy' }}</span>
+        </div>
+      </div>
+      
+      <div class="batches-section" *ngIf="c.batches && c.batches.length > 0">
+        <h5 class="batches-title">
+          <fa-icon [icon]="faGraduationCap"></fa-icon>
+          Batches ({{ c.batches.length }})
+        </h5>
+        <div class="batches-list">
+          <div class="batch-item" *ngFor="let b of c.batches">
+            <div class="batch-info">
+              <span class="batch-name">{{ b.batchName }}</span>
+              <span class="batch-date">Created: {{ b.createdOn | date:'MMM dd, yyyy' }}</span>
+            </div>
+            <div class="batch-status">
+              <span class="status-badge active">Active</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="no-batches" *ngIf="!c.batches || c.batches.length === 0">
+        <fa-icon [icon]="faUsers"></fa-icon>
+        <span>No batches assigned</span>
+      </div>
+    </div>
+  </div>
+</div>
 
-      <ul>
-        <li *ngFor="let b of c.batches">
-          Batch: {{ b.batchName }}  
-          <small> (Created: {{ b.createdOn | date:'shortDate' }}) </small>
-        </li>
-        <li *ngIf="!c.batches || c.batches.length === 0">
-          No batches assigned
-        </li>
-      </ul>
-
-      <small>
-        {{ c.startDate | date:'shortDate' }} → {{ c.endDate | date:'shortDate' }}
-      </small>
-    </li>
-  </ul>
+<!-- No Courses Message -->
+<div class="no-courses" *ngIf="!loading && selectedDate && selectedCourses.length === 0">
+  <fa-icon [icon]="faCalendarAlt" class="no-courses-icon"></fa-icon>
+  <h4>No Courses Scheduled</h4>
+  <p>No courses are scheduled for {{ selectedDate | date : "mediumDate" }}</p>
 </div>
 
