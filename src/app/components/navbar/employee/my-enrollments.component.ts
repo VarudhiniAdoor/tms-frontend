@@ -110,7 +110,7 @@ import { FeedbackService } from '../../../services/feedback.service';
                     *ngIf="!canGiveFeedback(e) && e.status === 'Approved'" 
                     class="feedback-restriction">
                     <i class="restriction-icon">⏳</i>
-                    <span class="restriction-text">Feedback not allowed until this batch finishes.</span>
+                    <span class="restriction-text">Feedback not available for this enrollment.</span>
                   </div>
                 </div>
               </td>
@@ -1057,10 +1057,9 @@ export class MyEnrollmentsComponent implements OnInit {
   }
 
   canGiveFeedback(enrollment: any): boolean {
-    // For demo purposes, allow feedback only for completed batches
-    // In real app, check if batch end date has passed
-    return enrollment.status === 'Approved' && enrollment.batchEndDate && 
-           new Date(enrollment.batchEndDate) < new Date();
+    // Allow feedback for approved enrollments
+    // The backend will handle the business logic validation (e.g., batch completion)
+    return enrollment.status === 'Approved';
   }
 
   toggleFeedbackForm(enrollment: any) {

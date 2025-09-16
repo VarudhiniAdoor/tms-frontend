@@ -54,7 +54,7 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       
       <form [formGroup]="batchForm" (ngSubmit)="submitBatch()" class="batch-form">
         <div class="form-grid">
-          <div class="form-group">
+          <div class="form-group calendar-group">
             <label for="calendarId" class="form-label">Course Calendar *</label>
             <div class="calendar-select-container">
               <select 
@@ -378,6 +378,10 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 20px;
       margin-bottom: 24px;
+    }
+
+    .form-group.calendar-group {
+      grid-column: 1 / -1;
     }
 
     .form-group {
