@@ -9,7 +9,7 @@ import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontaweso
 import { 
   faUsers, faBook, faCalendarAlt, faClipboardList, faChartBar, 
   faTachometerAlt, faGraduationCap, faUserTie, faUserCheck, 
-  faChartLine, faExclamationTriangle, faCheckCircle, faClock,
+  faChartLine, faExclamationTriangle, faClock,
   faEye, faEdit, faTrash, faPlus, faFilter,
   faSearch, faCog, faBell, faSignOutAlt, faUserCog, faSpinner
 } from '@fortawesome/free-solid-svg-icons';
@@ -121,18 +121,6 @@ import { FeedbackService } from '../services/feedback.service';
             </div>
           </div>
           
-          <div class="stat-card">
-            <div class="stat-icon completion">
-              <fa-icon [icon]="faCheckCircle"></fa-icon>
-            </div>
-            <div class="stat-content">
-              <h3>{{ stats.completionRate }}%</h3>
-              <p>Completion Rate</p>
-              <span class="stat-change" [class.positive]="stats.completionRate > 50" [class.neutral]="stats.completionRate <= 50">
-                {{ stats.completionRate > 0 ? 'Based on enrollments' : 'No data yet' }}
-              </span>
-            </div>
-          </div>
         </div>
 
 
@@ -245,7 +233,6 @@ export class AdminComponent implements OnInit {
   faUserCheck = faUserCheck;
   faChartLine = faChartLine;
   faExclamationTriangle = faExclamationTriangle;
-  faCheckCircle = faCheckCircle;
   faClock = faClock;
   faEye = faEye;
   faEdit = faEdit;
@@ -262,8 +249,7 @@ export class AdminComponent implements OnInit {
   stats = {
     totalUsers: 0,
     totalCourses: 0,
-    totalEnrollments: 0,
-    completionRate: 0
+    totalEnrollments: 0
   };
 
   // Loading states
@@ -288,7 +274,7 @@ export class AdminComponent implements OnInit {
     library.addIcons(
       faUsers, faBook, faCalendarAlt, faClipboardList, faChartBar,
       faTachometerAlt, faGraduationCap, faUserTie, faUserCheck,
-      faChartLine, faExclamationTriangle, faCheckCircle, faClock,
+      faChartLine, faExclamationTriangle, faClock,
       faEye, faEdit, faTrash, faPlus, faFilter,
       faSearch, faCog, faBell, faSignOutAlt, faUserCog, faSpinner
     );
@@ -346,12 +332,6 @@ export class AdminComponent implements OnInit {
     return this.enrollmentService.getAll().toPromise().then(enrollments => {
       this.enrollments = enrollments || [];
       this.stats.totalEnrollments = this.enrollments.length;
-      
-      // Calculate completion rate
-      const completedEnrollments = this.enrollments.filter(e => e.status === 'COMPLETED').length;
-      this.stats.completionRate = this.enrollments.length > 0 
-        ? Math.round((completedEnrollments / this.enrollments.length) * 100) 
-        : 0;
     }).catch(error => {
       console.error('Error loading enrollments:', error);
       this.enrollments = [];

@@ -44,8 +44,12 @@ export interface FeedbackCreateDto {
 }
 export interface FeedbackReadDto {
   feedbackId: number;
-  batchId: number;
+  batchId?: number;
+  userId?: number;
   username: string;
   rating: number;
-  feedbackText: string;
+  feedbackText?: string | null;
+  submittedOn: string;
+  courseName?: string;
+  batchName?: string;
 }

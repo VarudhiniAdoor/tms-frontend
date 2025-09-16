@@ -25,18 +25,7 @@ import {
     <div class="nav-center">
       <div class="nav-links" *ngIf="isLoggedIn">
       
-        <a *ngIf="isManager" routerLink="/manager" class="nav-link">
-          <fa-icon [icon]="faUserTie" class="nav-icon"></fa-icon>
-          Manager
-        </a>
-        <a *ngIf="isManager" routerLink="/batches" class="nav-link">
-          <fa-icon [icon]="faCalendarAlt" class="nav-icon"></fa-icon>
-          Batches
-        </a>
-        <a *ngIf="isManager" routerLink="/enrollment" class="nav-link">
-          <fa-icon [icon]="faCheckCircle" class="nav-icon"></fa-icon>
-          Enrollments
-        </a>
+  
         
       </div>
     </div>

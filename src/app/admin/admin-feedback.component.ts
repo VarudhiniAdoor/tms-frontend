@@ -60,16 +60,6 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
           </div>
         </div>
         
-        <div class="stat-card">
-          <div class="stat-icon completion">
-            <i class="icon">✅</i>
-          </div>
-          <div class="stat-content">
-            <h3>{{ completionRate }}%</h3>
-            <p>Feedback Rate</p>
-            <span class="stat-change positive">Response rate</span>
-          </div>
-        </div>
       </div>
 
       <!-- Search and Filters -->
@@ -95,11 +85,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         </div>
       </div>
 
+
       <!-- Feedback Table -->
       <div class="table-card">
         <div class="table-header">
           <div class="table-stats">
-            <span class="stat">{{ totalFeedbacks }} Total</span>
+            <span class="stat">{{ totalFeedbacks }} Total Feedback</span>
             <span class="stat">{{ highRatedFeedbacks }} High Rated (4-5⭐)</span>
             <span class="stat">{{ lowRatedFeedbacks }} Low Rated (1-2⭐)</span>
           </div>
@@ -122,38 +113,38 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
               <tr *ngFor="let f of filteredFeedbacks" class="data-row">
                 <td>
                   <div class="course-info">
-                    <div class="course-name">{{ f.courseName }}</div>
+                    <div class="course-name">{{ f.courseName || 'Unknown Course' }}</div>
                   </div>
                 </td>
                 <td>
                   <div class="batch-info">
-                    <div class="batch-name">{{ f.batchName }}</div>
-                    <div class="batch-id">ID: {{ f.batchId }}</div>
+                    <div class="batch-name">{{ f.batchName || 'Unknown Batch' }}</div>
+                    <div class="batch-id" *ngIf="f.batchId">ID: {{ f.batchId }}</div>
                   </div>
                 </td>
                 <td>
                   <div class="user-info">
-                    <div class="user-avatar">{{ f.username.charAt(0).toUpperCase() }}</div>
-                    <span>{{ f.username }}</span>
+                    <div class="user-avatar">{{ (f.username || 'U').charAt(0).toUpperCase() }}</div>
+                    <span>{{ f.username || 'Unknown User' }}</span>
                   </div>
                 </td>
                 <td>
                   <div class="rating-display">
                     <div class="stars">
-                      <span *ngFor="let star of getStars(f.rating)" [class.filled]="star" class="star">⭐</span>
+                      <span *ngFor="let star of getStars(f.rating || 0)" [class.filled]="star" class="star">⭐</span>
                     </div>
-                    <span class="rating-value">{{ f.rating }}/5</span>
+                    <span class="rating-value">{{ f.rating || 0 }}/5</span>
                   </div>
                 </td>
                 <td>
-                  <div class="feedback-text" [title]="f.feedbackText">
-                    {{ f.feedbackText.length > 50 ? (f.feedbackText | slice:0:50) + '...' : f.feedbackText }}
+                  <div class="feedback-text" [title]="f.feedbackText || 'No feedback text provided'">
+                    {{ f.feedbackText ? (f.feedbackText.length > 50 ? (f.feedbackText | slice:0:50) + '...' : f.feedbackText) : 'No feedback text' }}
                   </div>
                 </td>
                 <td>
                   <div class="date-info">
-                    <div class="date">{{ f.submittedOn | date:'MMM dd, yyyy' }}</div>
-                    <div class="time">{{ f.submittedOn | date:'shortTime' }}</div>
+                    <div class="date">{{ f.submittedOn ? (f.submittedOn | date:'MMM dd, yyyy') : 'Unknown Date' }}</div>
+                    <div class="time">{{ f.submittedOn ? (f.submittedOn | date:'shortTime') : '' }}</div>
                   </div>
                 </td>
                 <td class="actions-cell">
@@ -220,6 +211,12 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
       white-space: nowrap;
     }
 
+    .feedback-text:empty::before {
+      content: "No feedback text";
+      color: var(--light-text-secondary);
+      font-style: italic;
+    }
+
     .course-info, .batch-info, .user-info {
       display: flex;
       flex-direction: column;
@@ -275,6 +272,399 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     body.dark-mode .time {
       color: var(--dark-text-secondary);
     }
+
+    /* Admin Section Styles */
+    .admin-section {
+      padding: 24px;
+      background: var(--light-bg);
+      min-height: 100vh;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--light-border);
+    }
+
+    .header-content h2 {
+      margin: 0 0 8px 0;
+      color: var(--light-text);
+      font-size: 1.75rem;
+      font-weight: 600;
+    }
+
+    .header-content p {
+      margin: 0;
+      color: var(--light-text-secondary);
+      font-size: 0.95rem;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--light-text);
+      border: 1px solid var(--light-border);
+    }
+
+    .btn-outline:hover {
+      background: var(--light-surface);
+      border-color: var(--primary);
+    }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 0.85rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--light-text-secondary);
+    }
+
+    .btn-ghost:hover {
+      background: var(--light-surface);
+      color: var(--light-text);
+    }
+
+    .icon {
+      font-size: 1rem;
+    }
+
+    /* Stats Grid */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--light-card);
+      border: 1px solid var(--light-border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .stat-icon.feedback {
+      background: linear-gradient(135deg, #f59e0b, #f97316);
+      color: white;
+    }
+
+    .stat-icon.rating {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: white;
+    }
+
+    .stat-icon.batches {
+      background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+      color: white;
+    }
+
+    .stat-icon.completion {
+      background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+      color: white;
+    }
+
+    .stat-content h3 {
+      margin: 0 0 4px 0;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--light-text);
+    }
+
+    .stat-content p {
+      margin: 0 0 8px 0;
+      color: var(--light-text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .stat-change {
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .stat-change.positive {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    /* Search Section */
+    .search-section {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+
+    .search-container {
+      position: relative;
+      flex: 1;
+      min-width: 300px;
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--light-text-secondary);
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: 1px solid var(--light-border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: var(--light-bg);
+      color: var(--light-text);
+    }
+
+    .search-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .filter-container {
+      min-width: 200px;
+    }
+
+    .filter-select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid var(--light-border);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      background: var(--light-bg);
+      color: var(--light-text);
+    }
+
+    .filter-stats {
+      display: flex;
+      align-items: center;
+    }
+
+    .stat {
+      font-size: 0.9rem;
+      color: var(--light-text-secondary);
+      font-weight: 500;
+    }
+
+    /* Table Card */
+    .table-card {
+      background: var(--light-card);
+      border: 1px solid var(--light-border);
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .table-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--light-border);
+      background: var(--light-surface);
+    }
+
+    .table-stats {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .data-table th {
+      padding: 16px 20px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--light-text-secondary);
+      background: var(--light-surface);
+      border-bottom: 1px solid var(--light-border);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--light-border);
+      vertical-align: middle;
+    }
+
+    .data-row {
+      transition: all 0.2s ease;
+    }
+
+    .data-row:hover {
+      background: var(--light-surface);
+    }
+
+    .actions-cell {
+      text-align: center;
+    }
+
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 60px 20px;
+      text-align: center;
+    }
+
+    .empty-icon {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      margin: 0 0 12px 0;
+      font-size: 1.5rem;
+      color: var(--light-text);
+    }
+
+    .empty-state p {
+      margin: 0 0 20px 0;
+      color: var(--light-text-secondary);
+      font-size: 1rem;
+    }
+
+    /* Dark Mode Support */
+    body.dark-mode .admin-section {
+      background: var(--dark-bg);
+    }
+
+    body.dark-mode .section-header {
+      border-bottom-color: var(--dark-border);
+    }
+
+    body.dark-mode .header-content h2 {
+      color: var(--dark-text);
+    }
+
+    body.dark-mode .header-content p {
+      color: var(--dark-text-secondary);
+    }
+
+    body.dark-mode .stat-card {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+
+    body.dark-mode .stat-content h3 {
+      color: var(--dark-text);
+    }
+
+    body.dark-mode .stat-content p {
+      color: var(--dark-text-secondary);
+    }
+
+    body.dark-mode .search-input,
+    body.dark-mode .filter-select {
+      background: var(--dark-bg);
+      border-color: var(--dark-border);
+      color: var(--dark-text);
+    }
+
+    body.dark-mode .search-input:focus,
+    body.dark-mode .filter-select:focus {
+      border-color: var(--primary);
+    }
+
+    body.dark-mode .table-card {
+      background: var(--dark-card);
+      border-color: var(--dark-border);
+    }
+
+    body.dark-mode .table-header {
+      background: var(--dark-surface);
+      border-bottom-color: var(--dark-border);
+    }
+
+    body.dark-mode .data-table th {
+      background: var(--dark-surface);
+      border-bottom-color: var(--dark-border);
+      color: var(--dark-text-secondary);
+    }
+
+    body.dark-mode .data-table td {
+      border-bottom-color: var(--dark-border);
+    }
+
+    body.dark-mode .data-row:hover {
+      background: var(--dark-surface);
+    }
+
+    body.dark-mode .empty-state h3 {
+      color: var(--dark-text);
+    }
+
+    body.dark-mode .empty-state p {
+      color: var(--dark-text-secondary);
+    }
   `]
 })
 export class AdminFeedbackComponent implements OnInit {
@@ -288,7 +678,6 @@ export class AdminFeedbackComponent implements OnInit {
   averageRating = 0;
   highRatedFeedbacks = 0;
   lowRatedFeedbacks = 0;
-  completionRate = 0;
   feedbackBatches: any[] = [];
 
   constructor(private feedbackSvc: FeedbackService) {}
@@ -298,10 +687,17 @@ export class AdminFeedbackComponent implements OnInit {
   }
 
   loadFeedbacks() {
-    this.feedbackSvc.getAll().subscribe(data => {
-      this.feedbacks = data;
-      this.filteredFeedbacks = [...this.feedbacks];
-      this.calculateStatistics();
+    this.feedbackSvc.getAll().subscribe({
+      next: (data) => {
+        this.feedbacks = data || [];
+        this.filteredFeedbacks = [...this.feedbacks];
+        this.calculateStatistics();
+      },
+      error: (error) => {
+        console.error('Error loading feedbacks:', error);
+        this.feedbacks = [];
+        this.filteredFeedbacks = [];
+      }
     });
   }
 
@@ -310,24 +706,36 @@ export class AdminFeedbackComponent implements OnInit {
     
     if (this.totalFeedbacks > 0) {
       // Calculate average rating
-      const totalRating = this.feedbacks.reduce((sum, f) => sum + (f.rating || 0), 0);
-      this.averageRating = Math.round((totalRating / this.totalFeedbacks) * 10) / 10;
+      const validRatings = this.feedbacks.filter(f => f.rating && f.rating > 0);
+      if (validRatings.length > 0) {
+        const totalRating = validRatings.reduce((sum, f) => sum + (f.rating || 0), 0);
+        this.averageRating = Math.round((totalRating / validRatings.length) * 10) / 10;
+      } else {
+        this.averageRating = 0;
+      }
       
       // Calculate high/low rated feedbacks
-      this.highRatedFeedbacks = this.feedbacks.filter(f => f.rating >= 4).length;
-      this.lowRatedFeedbacks = this.feedbacks.filter(f => f.rating <= 2).length;
+      this.highRatedFeedbacks = this.feedbacks.filter(f => f.rating && f.rating >= 4).length;
+      this.lowRatedFeedbacks = this.feedbacks.filter(f => f.rating && f.rating <= 2).length;
       
-      // Calculate completion rate (assuming 100% for now)
-      this.completionRate = 100;
-      
-      // Get unique batches
+      // Get unique batches with feedback
       const batchMap = new Map();
       this.feedbacks.forEach(f => {
-        if (f.batchId && f.batchName) {
-          batchMap.set(f.batchId, { batchId: f.batchId, batchName: f.batchName });
+        if (f.batchName) {
+          const key = f.batchId || f.batchName; // Use batchId if available, otherwise use batchName
+          batchMap.set(key, { 
+            batchId: f.batchId, 
+            batchName: f.batchName 
+          });
         }
       });
       this.feedbackBatches = Array.from(batchMap.values());
+    } else {
+      // Reset all values when no feedback
+      this.averageRating = 0;
+      this.highRatedFeedbacks = 0;
+      this.lowRatedFeedbacks = 0;
+      this.feedbackBatches = [];
     }
   }
 
@@ -338,16 +746,19 @@ export class AdminFeedbackComponent implements OnInit {
     if (this.searchTerm.trim()) {
       const searchLower = this.searchTerm.toLowerCase();
       filtered = filtered.filter(f => 
-        f.courseName?.toLowerCase().includes(searchLower) ||
-        f.batchName?.toLowerCase().includes(searchLower) ||
-        f.username?.toLowerCase().includes(searchLower) ||
-        f.feedbackText?.toLowerCase().includes(searchLower)
+        (f.courseName || '').toLowerCase().includes(searchLower) ||
+        (f.batchName || '').toLowerCase().includes(searchLower) ||
+        (f.username || '').toLowerCase().includes(searchLower) ||
+        (f.feedbackText || '').toLowerCase().includes(searchLower)
       );
     }
     
     // Apply batch filter
     if (this.selectedBatch) {
-      filtered = filtered.filter(f => f.batchId == this.selectedBatch);
+      filtered = filtered.filter(f => 
+        f.batchId == this.selectedBatch || 
+        f.batchName === this.selectedBatch
+      );
     }
     
     this.filteredFeedbacks = filtered;
@@ -368,7 +779,16 @@ export class AdminFeedbackComponent implements OnInit {
   }
 
   viewFeedback(feedback: any) {
-    alert(`Feedback Details:\n\nCourse: ${feedback.courseName}\nBatch: ${feedback.batchName}\nUser: ${feedback.username}\nRating: ${feedback.rating}/5\n\nFeedback: ${feedback.feedbackText}\n\nSubmitted: ${new Date(feedback.submittedOn).toLocaleString()}`);
+    const stars = '⭐'.repeat(feedback.rating || 0) + '☆'.repeat(5 - (feedback.rating || 0));
+    const message = `Feedback Details:\n\n` +
+      `Course: ${feedback.courseName || 'Unknown Course'}\n` +
+      `Batch: ${feedback.batchName || 'Unknown Batch'}\n` +
+      `User: ${feedback.username || 'Unknown User'}\n` +
+      `Rating: ${stars} (${feedback.rating || 0}/5)\n\n` +
+      `Feedback: ${feedback.feedbackText || 'No feedback text provided'}\n\n` +
+      `Submitted: ${feedback.submittedOn ? new Date(feedback.submittedOn).toLocaleString() : 'Unknown Date'}`;
+    
+    alert(message);
   }
 
   exportReports() {
@@ -377,12 +797,12 @@ export class AdminFeedbackComponent implements OnInit {
     const csvContent = [
       headers.join(','),
       ...this.filteredFeedbacks.map(f => [
-        `"${f.courseName || ''}"`,
-        `"${f.batchName || ''}"`,
-        `"${f.username || ''}"`,
+        `"${f.courseName || 'Unknown Course'}"`,
+        `"${f.batchName || 'Unknown Batch'}"`,
+        `"${f.username || 'Unknown User'}"`,
         f.rating || 0,
-        `"${(f.feedbackText || '').replace(/"/g, '""')}"`,
-        `"${new Date(f.submittedOn).toLocaleDateString()}"`
+        `"${(f.feedbackText || 'No feedback text').replace(/"/g, '""')}"`,
+        `"${f.submittedOn ? new Date(f.submittedOn).toLocaleDateString() : 'Unknown Date'}"`
       ].join(','))
     ].join('\n');
 

@@ -71,6 +71,13 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
                 Create Calendar
               </button>
             </div>
+            <!-- Selected Calendar Info -->
+            <div class="selected-calendar-info" *ngIf="batchForm.get('calendarId')?.value">
+              <div class="calendar-preview">
+                <i class="icon">📅</i>
+                <span>{{ getSelectedCalendarInfo() }}</span>
+              </div>
+            </div>
           </div>
           
           <div class="form-group">
@@ -89,47 +96,51 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
           <div class="form-divider">
             <span>Create New Calendar</span>
           </div>
-          <div class="form-grid">
-            <div class="form-group">
-              <label for="courseId" class="form-label">Course *</label>
-              <select 
-                id="courseId"
-                [(ngModel)]="newCalendar.courseId"
-                class="form-select">
-                <option value="">-- Select Course --</option>
-                <option *ngFor="let course of courses" [value]="course.courseId">
-                  {{ course.courseName }} ({{ course.durationDays }} days)
-                </option>
-              </select>
-            </div>
-            
-            <div class="form-group">
-              <label for="startDate" class="form-label">Start Date *</label>
-              <input 
-                id="startDate"
-                type="date"
-                [(ngModel)]="newCalendar.startDate"
-                class="form-input">
-            </div>
-            
-            <div class="form-group">
-              <label for="endDate" class="form-label">End Date *</label>
-              <input 
-                id="endDate"
-                type="date"
-                [(ngModel)]="newCalendar.endDate"
-                class="form-input">
-            </div>
-          </div>
           
-          <div class="form-actions">
-            <button type="button" class="btn btn-outline" (click)="cancelCreateCalendar()">
-              Cancel
-            </button>
-            <button type="button" class="btn btn-primary" (click)="createCalendar()">
-              Create Calendar
-            </button>
-          </div>
+          
+          <form [formGroup]="calendarForm">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="courseId" class="form-label">Course *</label>
+                <select 
+                  id="courseId"
+                  formControlName="courseId"
+                  class="form-select">
+                  <option value="">-- Select Course --</option>
+                  <option *ngFor="let course of courses" [value]="course.courseId">
+                    {{ course.courseName }} ({{ course.durationDays }} days)
+                  </option>
+                </select>
+              </div>
+              
+              <div class="form-group">
+                <label for="startDate" class="form-label">Start Date *</label>
+                <input 
+                  id="startDate"
+                  type="date"
+                  formControlName="startDate"
+                  class="form-input">
+              </div>
+              
+              <div class="form-group">
+                <label for="endDate" class="form-label">End Date *</label>
+                <input 
+                  id="endDate"
+                  type="date"
+                  formControlName="endDate"
+                  class="form-input">
+              </div>
+            </div>
+            
+            <div class="form-actions">
+              <button type="button" class="btn btn-outline" (click)="cancelCreateCalendar()">
+                Cancel
+              </button>
+              <button type="button" class="btn btn-primary" (click)="createCalendar()">
+                Create Calendar
+              </button>
+            </div>
+          </form>
         </div>
 
         <!-- Form Actions -->
@@ -453,6 +464,27 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       align-items: center;
       justify-content: center;
       gap: 6px;
+    }
+
+    .selected-calendar-info {
+      margin-top: 8px;
+    }
+
+    .calendar-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: #dbeafe;
+      border: 1px solid #93c5fd;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      color: #1e40af;
+    }
+    body.dark-mode .calendar-preview {
+      background: #1e3a8a;
+      border-color: #3b82f6;
+      color: #dbeafe;
     }
 
     .calendar-creation-form {
@@ -785,12 +817,7 @@ export class AdminCalendarComponent implements OnInit {
   showCreateCalendar = false;
   editingBatchId: number | null = null;
   batchForm!: FormGroup;
-  
-  newCalendar = {
-    courseId: null as number | null,
-    startDate: '',
-    endDate: ''
-  };
+  calendarForm!: FormGroup;
 
   constructor(
     private fb: FormBuilder,
@@ -804,6 +831,12 @@ export class AdminCalendarComponent implements OnInit {
     this.batchForm = this.fb.group({
       calendarId: ['', Validators.required],
       batchName: ['', Validators.required]
+    });
+
+    this.calendarForm = this.fb.group({
+      courseId: [null, Validators.required],
+      startDate: ['', Validators.required],
+      endDate: ['', Validators.required]
     });
 
     this.loadData();
@@ -833,15 +866,23 @@ export class AdminCalendarComponent implements OnInit {
       // Create mode
       this.editingBatchId = null;
       this.batchForm.reset();
+      this.calendarForm.reset(); // Reset calendar creation form
+      this.showCreateCalendar = false;
     }
   }
 
   submitBatch() {
-    if (this.batchForm.invalid) return;
+    if (this.batchForm.invalid) {
+      alert('Please fill in all required fields');
+      return;
+    }
 
     const { calendarId, batchName } = this.batchForm.value;
     const calendar = this.calendars.find(c => c.calendarId == calendarId);
-    if (!calendar) return;
+    if (!calendar) {
+      alert('Please select a valid course calendar');
+      return;
+    }
 
     // Calculate end date (skip weekends) for display
     const startDate = new Date(calendar.startDate);
@@ -919,25 +960,43 @@ export class AdminCalendarComponent implements OnInit {
   }
 
   createCalendar() {
-    if (!this.newCalendar.courseId || !this.newCalendar.startDate || !this.newCalendar.endDate) {
+    if (this.calendarForm.invalid) {
       alert('Please fill in all calendar fields');
       return;
     }
 
-    const course = this.courses.find(c => c.courseId === this.newCalendar.courseId);
-    if (!course) return;
+    const formValue = this.calendarForm.value;
+
+    // Convert courseId to number for comparison
+    const courseId = Number(formValue.courseId);
+    const course = this.courses.find(c => c.courseId === courseId);
+    if (!course) {
+      alert('Selected course not found');
+      return;
+    }
 
     const calendarData = {
-      courseId: this.newCalendar.courseId,
-      startDate: this.newCalendar.startDate,
-      endDate: this.newCalendar.endDate
+      courseId: courseId,
+      startDate: formValue.startDate,
+      endDate: formValue.endDate
     };
 
     this.calSvc.create(calendarData).subscribe({
       next: (newCalendar) => {
         alert('Calendar created successfully!');
+        
+        // Add the new calendar to the calendars array
         this.calendars.push(newCalendar);
+        
+        // Automatically select the newly created calendar in the batch form
+        this.batchForm.patchValue({
+          calendarId: newCalendar.calendarId
+        });
+        
+        // Close the calendar creation form
         this.cancelCreateCalendar();
+        
+        // Reload data to ensure everything is up to date
         this.loadData();
       },
       error: (err) => {
@@ -949,10 +1008,19 @@ export class AdminCalendarComponent implements OnInit {
 
   cancelCreateCalendar() {
     this.showCreateCalendar = false;
-    this.newCalendar = {
-      courseId: null,
-      startDate: '',
-      endDate: ''
-    };
+    this.calendarForm.reset();
+  }
+
+  getSelectedCalendarInfo(): string {
+    const calendarId = this.batchForm.get('calendarId')?.value;
+    if (!calendarId) return '';
+    
+    const calendar = this.calendars.find(c => c.calendarId == calendarId);
+    if (!calendar) return '';
+    
+    const startDate = new Date(calendar.startDate).toLocaleDateString();
+    const endDate = new Date(calendar.endDate).toLocaleDateString();
+    
+    return `${calendar.course?.courseName} - ${startDate} to ${endDate}`;
   }
 }

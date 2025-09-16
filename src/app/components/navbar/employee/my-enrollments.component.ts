@@ -16,6 +16,8 @@ import { FeedbackService } from '../../../services/feedback.service';
       <p>Loading your enrollments...</p>
     </div>
 
+
+
     <!-- Enrollments Table -->
     <div class="enrollments-table-container" *ngIf="!loading && enrollments.length > 0">
       <div class="table-header">
@@ -23,7 +25,6 @@ import { FeedbackService } from '../../../services/feedback.service';
           <span class="stat">{{ enrollments.length }} Total Enrollments</span>
           <span class="stat">{{ getApprovedCount() }} Approved</span>
           <span class="stat">{{ getPendingCount() }} Pending</span>
-          <span class="stat">{{ getFeedbackCount() }} With Feedback</span>
         </div>
       </div>
       
@@ -35,7 +36,6 @@ import { FeedbackService } from '../../../services/feedback.service';
               <th>Batch</th>
               <th>Status</th>
               <th>Approved By</th>
-              <th>Feedback</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -68,22 +68,6 @@ import { FeedbackService } from '../../../services/feedback.service';
                   <span class="no-approver">—</span>
                 </ng-template>
               </td>
-              <td class="feedback-cell">
-                <div class="feedback-status" *ngIf="e.feedback; else noFeedback">
-                  <div class="feedback-rating">
-                    <span *ngFor="let star of getStars(e.feedback.rating)" 
-                          [class.filled]="star" 
-                          class="star">⭐</span>
-                    <span class="rating-text">{{ e.feedback.rating }}/5</span>
-                  </div>
-                  <div class="feedback-preview" [title]="e.feedback.feedbackText">
-                    {{ e.feedback.feedbackText.length > 30 ? (e.feedback.feedbackText | slice:0:30) + '...' : e.feedback.feedbackText }}
-                  </div>
-                </div>
-                <ng-template #noFeedback>
-                  <span class="no-feedback">No feedback yet</span>
-                </ng-template>
-              </td>
               <td class="actions-cell">
                 <div class="action-buttons">
                   <!-- Rejection Reason Button -->
@@ -102,12 +86,22 @@ import { FeedbackService } from '../../../services/feedback.service';
                     (click)="toggleFeedbackForm(e)"
                     [class.active]="selectedEnrollment === e">
                     <i class="btn-icon">💬</i>
-                    Feedback
+                    Give Feedback
+                  </button>
+                  
+                  <!-- Already Sent Feedback Button -->
+                  <button 
+                    *ngIf="hasSubmittedFeedback(e)" 
+                    class="btn btn-sm btn-success"
+                    disabled
+                    title="Feedback already submitted">
+                    <i class="btn-icon">✅</i>
+                    Already Sent
                   </button>
                   
                   <!-- Feedback Not Allowed Message -->
                   <div 
-                    *ngIf="!canGiveFeedback(e) && e.status === 'Approved'" 
+                    *ngIf="!canGiveFeedback(e) && e.status === 'Approved' && !hasSubmittedFeedback(e)" 
                     class="feedback-restriction">
                     <i class="restriction-icon">⏳</i>
                     <span class="restriction-text">Feedback not available for this enrollment.</span>
@@ -124,10 +118,13 @@ import { FeedbackService } from '../../../services/feedback.service';
     <div *ngIf="showFeedbackModal" class="feedback-modal-overlay" (click)="closeFeedbackModal()">
       <div class="feedback-modal" (click)="$event.stopPropagation()">
         <div class="modal-header">
-          <h3 class="modal-title">
-            <i class="modal-icon">💬</i>
-            Share Your Feedback
-          </h3>
+          <div class="modal-title-section">
+            <h3 class="modal-title">
+              <i class="modal-icon">💬</i>
+              Share Your Feedback
+            </h3>
+            <p class="modal-subtitle">Help us improve our training programs</p>
+          </div>
           <button class="close-btn" (click)="closeFeedbackModal()">
             <i class="close-icon">✕</i>
           </button>
@@ -144,32 +141,51 @@ import { FeedbackService } from '../../../services/feedback.service';
           
           <form class="feedback-form">
             <div class="form-group">
-              <label class="form-label">Your Rating</label>
+              <label class="form-label">Your Rating *</label>
               <div class="rating-container">
                 <div class="star-rating">
                   <span 
                     *ngFor="let star of [1,2,3,4,5]; let i = index" 
                     class="star" 
                     [class.filled]="i < toNumber(rating.value)"
-                    (click)="setRating(i + 1)">
+                    (click)="setRating(i + 1)"
+                    [title]="'Rate ' + (i + 1) + ' star' + (i + 1 > 1 ? 's' : '')">
                     ⭐
                   </span>
                 </div>
                 <div class="rating-text" *ngIf="rating.value">
-                  {{ rating.value }} Star{{ toNumber(rating.value) > 1 ? 's' : '' }}
+                  <span class="rating-value">{{ rating.value }} Star{{ toNumber(rating.value) > 1 ? 's' : '' }}</span>
+                  <span class="rating-description">{{ getRatingDescription(toNumber(rating.value)) }}</span>
                 </div>
               </div>
             </div>
             
             <div class="form-group">
-              <label class="form-label">Your Feedback</label>
+              <label class="form-label">Your Feedback *</label>
               <textarea 
                 [formControl]="feedbackText" 
-                placeholder="Share your thoughts about this course..."
+                (input)="onFeedbackTextChange()"
+                placeholder="Share your thoughts about this course... What did you like? What could be improved?"
                 class="feedback-textarea"
-                rows="4"></textarea>
+                rows="4"
+                maxlength="500"></textarea>
+              <div class="character-count">
+                {{ feedbackText.value?.length || 0 }}/500 characters
+              </div>
             </div>
           </form>
+          
+          <!-- Form Status Indicator -->
+          <div class="form-status" *ngIf="rating.value || feedbackText.value">
+            <div class="status-item" [class.valid]="isRatingValid()">
+              <i class="status-icon">{{ isRatingValid() ? '✅' : '⏳' }}</i>
+              <span>Rating: {{ rating.value || 'Not selected' }}</span>
+            </div>
+            <div class="status-item" [class.valid]="isFeedbackValid()">
+              <i class="status-icon">{{ isFeedbackValid() ? '✅' : '⏳' }}</i>
+              <span>Feedback: {{ feedbackText.value?.trim()?.length || 0 }}/10 characters minimum</span>
+            </div>
+          </div>
         </div>
         
         <div class="modal-footer">
@@ -179,9 +195,11 @@ import { FeedbackService } from '../../../services/feedback.service';
           <button 
             class="btn btn-primary"
             (click)="submitFeedback(selectedEnrollment)"
-            [disabled]="!rating.value || !feedbackText.value">
-            <i class="btn-icon">📤</i>
-            Submit Feedback
+            [disabled]="!isFormValid() || isSubmitting"
+            [class.btn-loading]="isSubmitting">
+            <i class="btn-icon" *ngIf="!isSubmitting">📤</i>
+            <i class="btn-icon" *ngIf="isSubmitting">⏳</i>
+            {{ isSubmitting ? 'Submitting...' : 'Submit Feedback' }}
           </button>
         </div>
       </div>
@@ -263,12 +281,21 @@ import { FeedbackService } from '../../../services/feedback.service';
       padding: 20px 24px;
       border-bottom: 1px solid var(--light-border);
       background: var(--light-surface);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
     }
 
     .table-stats {
       display: flex;
       gap: 24px;
       flex-wrap: wrap;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
 
     .stat {
@@ -435,51 +462,6 @@ import { FeedbackService } from '../../../services/feedback.service';
       font-style: italic;
     }
 
-    /* Feedback Cell */
-    .feedback-cell {
-      min-width: 200px;
-    }
-
-    .feedback-status {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .feedback-rating {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-    }
-
-    .feedback-rating .star {
-      font-size: 0.8rem;
-      opacity: 0.3;
-    }
-
-    .feedback-rating .star.filled {
-      opacity: 1;
-    }
-
-    .rating-text {
-      font-size: 0.8rem;
-      color: var(--primary);
-      font-weight: 600;
-      margin-left: 4px;
-    }
-
-    .feedback-preview {
-      font-size: 0.8rem;
-      color: var(--light-text-secondary);
-      line-height: 1.3;
-      max-width: 180px;
-    }
-
-    .no-feedback {
-      color: var(--light-text-secondary);
-      font-style: italic;
-      font-size: 0.85rem;
-    }
 
     /* Actions Cell */
     .actions-cell {
@@ -528,6 +510,17 @@ import { FeedbackService } from '../../../services/feedback.service';
       box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
     }
 
+    .btn-primary.btn-loading {
+      background: var(--primary-hover);
+      cursor: not-allowed;
+      opacity: 0.8;
+    }
+
+    .btn-primary.btn-loading:hover {
+      transform: none;
+      box-shadow: none;
+    }
+
     .btn-outline {
       background: transparent;
       color: var(--light-text);
@@ -546,6 +539,16 @@ import { FeedbackService } from '../../../services/feedback.service';
 
     .btn-warning:hover {
       background: #fef3c7;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: white;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+      transform: translateY(-1px);
     }
 
     .btn-icon {
@@ -612,6 +615,12 @@ import { FeedbackService } from '../../../services/feedback.service';
       margin-bottom: 24px;
     }
 
+    .modal-title-section {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
     .modal-title {
       display: flex;
       align-items: center;
@@ -620,6 +629,13 @@ import { FeedbackService } from '../../../services/feedback.service';
       font-size: 1.25rem;
       font-weight: 700;
       color: var(--light-text);
+    }
+
+    .modal-subtitle {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--light-text-secondary);
+      font-weight: 400;
     }
 
     .modal-icon {
@@ -719,9 +735,22 @@ import { FeedbackService } from '../../../services/feedback.service';
     }
 
     .rating-text {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 8px;
+    }
+
+    .rating-value {
       font-size: 0.9rem;
       color: var(--primary);
       font-weight: 600;
+    }
+
+    .rating-description {
+      font-size: 0.8rem;
+      color: var(--light-text-secondary);
+      font-style: italic;
     }
 
     .feedback-textarea {
@@ -741,6 +770,46 @@ import { FeedbackService } from '../../../services/feedback.service';
       outline: none;
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .character-count {
+      text-align: right;
+      font-size: 0.8rem;
+      color: var(--light-text-secondary);
+      margin-top: 4px;
+    }
+
+    /* Form Status Indicator */
+    .form-status {
+      margin-top: 16px;
+      padding: 12px;
+      background: var(--light-surface);
+      border-radius: 8px;
+      border: 1px solid var(--light-border);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+    }
+
+    .status-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .status-item.valid {
+      color: #10b981;
+    }
+
+    .status-item:not(.valid) {
+      color: var(--light-text-secondary);
+    }
+
+    .status-icon {
+      font-size: 0.9rem;
     }
 
     .modal-footer {
@@ -878,6 +947,15 @@ import { FeedbackService } from '../../../services/feedback.service';
       border-color: var(--primary);
     }
 
+    body.dark-mode .form-status {
+      background: var(--dark-surface);
+      border-color: var(--dark-border);
+    }
+
+    body.dark-mode .status-item:not(.valid) {
+      color: var(--dark-text-secondary);
+    }
+
     body.dark-mode .modal-footer {
       border-top-color: var(--dark-border);
       background: var(--dark-surface);
@@ -891,17 +969,6 @@ import { FeedbackService } from '../../../services/feedback.service';
       color: var(--dark-text-secondary);
     }
 
-    body.dark-mode .rating-text {
-      color: var(--primary);
-    }
-
-    body.dark-mode .feedback-preview {
-      color: var(--dark-text-secondary);
-    }
-
-    body.dark-mode .no-feedback {
-      color: var(--dark-text-secondary);
-    }
 
     /* Responsive Design */
     @media (max-width: 768px) {
@@ -1008,6 +1075,9 @@ export class MyEnrollmentsComponent implements OnInit {
   // Form controls
   rating = new FormControl('');
   feedbackText = new FormControl('');
+  
+  // Submission state
+  isSubmitting = false;
 
   constructor(
     private enrollmentService: EnrollmentService,
@@ -1022,12 +1092,60 @@ export class MyEnrollmentsComponent implements OnInit {
     this.loading = true;
     this.enrollmentService.getMyEnrollments().subscribe({
       next: (data) => {
-        this.enrollments = data;
+        this.enrollments = data || [];
+        // Load feedback for each enrollment
+        this.loadFeedbackForEnrollments();
         this.loading = false;
       },
       error: (error) => {
         console.error('Error loading enrollments:', error);
         this.loading = false;
+      }
+    });
+  }
+
+  loadFeedbackForEnrollments() {
+    // Load feedback for each enrollment
+    this.enrollments.forEach(enrollment => {
+      if (enrollment.batchId) {
+        this.feedbackService.getForBatch(enrollment.batchId).subscribe({
+          next: (feedbackList) => {
+            // Find feedback for this specific enrollment by username and batch name
+            let userFeedback = feedbackList.find(f => 
+              f.username === enrollment.employeeName && f.batchName === enrollment.batchName
+            );
+            
+            // If not found, try case-insensitive username match with batch name
+            if (!userFeedback) {
+              userFeedback = feedbackList.find(f => 
+                f.username && 
+                f.username.toLowerCase() === enrollment.employeeName.toLowerCase() &&
+                f.batchName === enrollment.batchName
+              );
+            }
+            
+            // If still not found, try by userId and batch name (if available)
+            if (!userFeedback && enrollment.userId) {
+              userFeedback = feedbackList.find(f => 
+                f.userId === enrollment.userId && f.batchName === enrollment.batchName
+              );
+            }
+            
+            // If still not found, try matching by batchId only (if feedback has batchId)
+            if (!userFeedback) {
+              userFeedback = feedbackList.find(f => 
+                f.batchId === enrollment.batchId
+              );
+            }
+            
+            if (userFeedback) {
+              enrollment.feedback = userFeedback;
+            }
+          },
+          error: (error) => {
+            console.error(`Error loading feedback for batch ${enrollment.batchId}:`, error);
+          }
+        });
       }
     });
   }
@@ -1040,26 +1158,20 @@ export class MyEnrollmentsComponent implements OnInit {
     return this.enrollments.filter(e => e.status === 'Pending').length;
   }
 
-  getFeedbackCount(): number {
-    return this.enrollments.filter(e => e.feedback).length;
-  }
 
-  getStars(rating: number): boolean[] {
-    const stars = [];
-    for (let i = 1; i <= 5; i++) {
-      stars.push(i <= rating);
-    }
-    return stars;
-  }
 
   getStatusClass(status: string): string {
     return status.toLowerCase();
   }
 
   canGiveFeedback(enrollment: any): boolean {
-    // Allow feedback for approved enrollments
-    // The backend will handle the business logic validation (e.g., batch completion)
-    return enrollment.status === 'Approved';
+    // Allow feedback for approved enrollments that don't already have feedback
+    return enrollment.status === 'Approved' && !this.hasSubmittedFeedback(enrollment);
+  }
+
+  hasSubmittedFeedback(enrollment: any): boolean {
+    // Check if feedback has been submitted for this enrollment
+    return enrollment.feedback && enrollment.feedback.feedbackId;
   }
 
   toggleFeedbackForm(enrollment: any) {
@@ -1074,32 +1186,117 @@ export class MyEnrollmentsComponent implements OnInit {
     this.selectedEnrollment = null;
     this.rating.setValue('');
     this.feedbackText.setValue('');
+    this.isSubmitting = false;
   }
 
   setRating(rating: number) {
     this.rating.setValue(rating.toString());
   }
 
+  onFeedbackTextChange() {
+    // This method will be called when the textarea value changes
+  }
+
+  isRatingValid(): boolean {
+    const ratingValue = this.rating.value;
+    return !!(ratingValue && 
+              ratingValue !== '' && 
+              !isNaN(Number(ratingValue)) && 
+              Number(ratingValue) >= 1 && 
+              Number(ratingValue) <= 5);
+  }
+
+  isFeedbackValid(): boolean {
+    const feedbackValue = this.feedbackText.value?.trim();
+    return !!(feedbackValue && feedbackValue.length >= 10);
+  }
+
+  isFormValid(): boolean {
+    const ratingValue = this.rating.value;
+    const feedbackValue = this.feedbackText.value?.trim();
+    
+    // Check if rating is selected and valid
+    const ratingValid = !!(ratingValue && 
+                          ratingValue !== '' && 
+                          !isNaN(Number(ratingValue)) && 
+                          Number(ratingValue) >= 1 && 
+                          Number(ratingValue) <= 5);
+    
+    // Check if feedback text is provided
+    const feedbackValid = !!(feedbackValue && feedbackValue.length >= 10);
+    
+    return ratingValid && feedbackValid;
+  }
+
   submitFeedback(enrollment: any) {
-    if (!this.rating.value || !this.feedbackText.value) {
+    // Prevent multiple submissions
+    if (this.isSubmitting) {
       return;
     }
 
+    // Validate enrollment
+    if (!enrollment || !enrollment.batchId) {
+      alert('Invalid enrollment data. Please try again.');
+      return;
+    }
+
+    // Validate form data
+    if (!this.isFormValid()) {
+      alert('Please provide a valid rating (1-5 stars) and at least 10 characters of feedback.');
+      return;
+    }
+
+    this.isSubmitting = true;
+
+    const ratingValue = Number(this.rating.value);
+    const feedbackTextValue = this.feedbackText.value?.trim() || '';
+
     const feedbackData = {
-      rating: Number(this.rating.value) || 0,
-      feedbackText: this.feedbackText.value || ''
+      rating: ratingValue,
+      feedbackText: feedbackTextValue
     };
+
+    // Ensure feedbackText is not empty string
+    if (!feedbackTextValue || feedbackTextValue.trim() === '') {
+      alert('Please provide feedback text.');
+      this.isSubmitting = false;
+      return;
+    }
 
     this.feedbackService.submit(Number(enrollment.batchId), feedbackData).subscribe({
       next: (response: any) => {
-        console.log('Feedback submitted successfully:', response);
+        this.isSubmitting = false;
         this.closeFeedbackModal();
-        // Show success message
+        // Reload enrollments to show updated feedback
+        this.loadEnrollments();
         alert('Feedback submitted successfully!');
       },
       error: (error: any) => {
         console.error('Error submitting feedback:', error);
-        alert('Error submitting feedback. Please try again.');
+        this.isSubmitting = false;
+        
+        // Handle specific backend errors
+        let errorMessage = 'Please try again.';
+        if (error.error) {
+          if (typeof error.error === 'string') {
+            errorMessage = error.error;
+          } else if (error.error.message) {
+            errorMessage = error.error.message;
+          }
+        } else if (error.message) {
+          errorMessage = error.message;
+        }
+        
+        // Show specific error messages
+        if (errorMessage.includes('batch has finished')) {
+          errorMessage = 'Feedback can only be submitted after the batch has finished.';
+        } else if (errorMessage.includes('already submitted')) {
+          errorMessage = 'You have already submitted feedback for this batch.';
+        } else if (errorMessage.includes('Rating must be 1-5')) {
+          errorMessage = 'Please select a valid rating between 1 and 5 stars.';
+        }
+        
+        alert(`Error submitting feedback: ${errorMessage}`);
       }
     });
   }
@@ -1112,6 +1309,18 @@ export class MyEnrollmentsComponent implements OnInit {
   closeRejectionModal() {
     this.showRejectionModal = false;
     this.rejectionReason = '';
+  }
+
+
+  getRatingDescription(rating: number): string {
+    const descriptions = {
+      1: 'Poor - Needs significant improvement',
+      2: 'Fair - Below expectations',
+      3: 'Good - Meets expectations',
+      4: 'Very Good - Exceeds expectations',
+      5: 'Excellent - Outstanding experience'
+    };
+    return descriptions[rating as keyof typeof descriptions] || '';
   }
 
   // Helper method for template
