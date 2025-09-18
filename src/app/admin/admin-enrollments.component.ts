@@ -1,23 +1,50 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { EnrollmentService } from '../services/enrollment.service';
 import { EnrollmentDto } from '../models/domain.models';
 import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
+import { PaginationComponent } from '../components/pagination/pagination.component';
+import { 
+  faUser, faUserTie, faEnvelope, faCalendarAlt, faCheck, faTimes, 
+  faEye, faEdit, faTrash, faGraduationCap, faBook
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-admin-enrollments',
   standalone: true,
-  imports: [CommonModule, MatTableModule, FormsModule],
+  imports: [CommonModule, MatTableModule, FormsModule, FontAwesomeModule, PaginationComponent],
   styles: [`
     .admin-section {
       padding: 24px;
-      background: var(--light-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(156, 39, 176, 0.03) 30%, rgba(243, 229, 245, 0.6) 60%, rgba(248, 250, 252, 0.8) 100%);
       min-height: 100vh;
       transition: background var(--transition-normal);
+      position: relative;
+    }
+    .admin-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
     body.dark-mode .admin-section {
-      background: var(--dark-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(45, 27, 105, 0.4) 30%, rgba(17, 17, 24, 0.9) 100%);
+    }
+    body.dark-mode .admin-section::before {
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
     }
 
     .section-header {
@@ -495,11 +522,11 @@ import { FormsModule } from '@angular/forms';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let enrollment of filteredEnrollments" class="data-row">
+            <tr *ngFor="let enrollment of paginatedEnrollments" class="data-row">
               <td class="id-cell">{{ enrollment.enrollmentId }}</td>
               <td class="employee-cell">
                 <div class="employee-info">
-                  <div class="employee-avatar">{{ enrollment.employeeName?.charAt(0)?.toUpperCase() || 'E' }}</div>
+                  <div class="employee-avatar">{{ enrollment.employeeName.charAt(0).toUpperCase() || 'E' }}</div>
                   <span>{{ enrollment.employeeName }}</span>
                 </div>
               </td>
@@ -540,6 +567,16 @@ import { FormsModule } from '@angular/forms';
           </tbody>
         </table>
         
+        <!-- Pagination -->
+        <app-pagination
+          *ngIf="filteredEnrollments.length > 0"
+          [currentPage]="currentPage"
+          [pageSize]="pageSize"
+          [totalItems]="totalItems"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
+        
         <!-- Empty State -->
         <div class="empty-state" *ngIf="filteredEnrollments.length === 0 && enrollments.length === 0">
           <div class="empty-icon">📋</div>
@@ -564,9 +601,28 @@ import { FormsModule } from '@angular/forms';
 export class AdminEnrollmentsComponent implements OnInit {
   enrollments: EnrollmentDto[] = [];
   filteredEnrollments: EnrollmentDto[] = [];
+  paginatedEnrollments: EnrollmentDto[] = [];
   selectedStatus = '';
   searchText = '';
   statuses = ['Pending', 'Approved', 'Rejected']; // Adjust based on your app
+
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
+
+  // FontAwesome Icons
+  faUser = faUser;
+  faUserTie = faUserTie;
+  faEnvelope = faEnvelope;
+  faCalendarAlt = faCalendarAlt;
+  faCheck = faCheck;
+  faTimes = faTimes;
+  faEye = faEye;
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faGraduationCap = faGraduationCap;
+  faBook = faBook;
 
   constructor(private enrollmentSvc: EnrollmentService) {}
 
@@ -578,7 +634,26 @@ export class AdminEnrollmentsComponent implements OnInit {
     this.enrollmentSvc.getAll().subscribe(data => {
       this.enrollments = data;
       this.filteredEnrollments = data;
+      this.updatePagination();
     });
+  }
+
+  updatePagination() {
+    this.totalItems = this.filteredEnrollments.length;
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedEnrollments = this.filteredEnrollments.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePagination();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
   applyFilters() {
@@ -591,6 +666,8 @@ export class AdminEnrollmentsComponent implements OnInit {
         e.batchName?.toLowerCase().includes(this.searchText.toLowerCase());
       return matchesStatus && matchesSearch;
     });
+    this.currentPage = 1; // Reset to first page when filtering
+    this.updatePagination();
   }
 
   getStatusCount(status: string): number {

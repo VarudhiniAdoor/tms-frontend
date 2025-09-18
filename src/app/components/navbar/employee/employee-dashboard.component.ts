@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EmployeeBatchesComponent } from './employee-batches.component';
 import { MyEnrollmentsComponent } from './my-enrollments.component';
+import { ChatbotComponent } from '../../chatbot/chatbot.component';
 import { AuthService } from '../../../core/auth.service';
 import { EnrollmentService } from '../../../services/enrollment.service';
 import { BatchService } from '../../../services/batch.service';
@@ -13,73 +14,69 @@ import {
 @Component({
   selector: 'app-employee-dashboard',
   standalone: true,
-  imports: [CommonModule, EmployeeBatchesComponent, MyEnrollmentsComponent, FontAwesomeModule],
+  imports: [CommonModule, EmployeeBatchesComponent, MyEnrollmentsComponent, ChatbotComponent, FontAwesomeModule],
+  styleUrls: ['./employee-dashboard.css'],
   template: `
     <div class="employee-dashboard">
-      <!-- Sidebar -->
-      <aside class="sidebar">
+      <!-- Modern Sidebar -->
+      <aside class="employee-sidebar">
         <div class="sidebar-header">
-          <div class="employee-logo">
-            <fa-icon [icon]="faGraduationCap" class="logo-icon"></fa-icon>
-            <span class="logo-text">Employee Panel</span>
+          <div class="employee-brand">
+            <div class="brand-icon">
+              <fa-icon [icon]="faGraduationCap"></fa-icon>
+            </div>
+            <div class="brand-content">
+              <h2 class="brand-title">Employee Panel</h2>
+              <p class="brand-subtitle">Learning Hub</p>
+            </div>
           </div>
         </div>
         
-        <nav class="sidebar-nav">
-          <button 
-            [class.active]="tab==='batches'" 
-            (click)="tab='batches'"
-            class="nav-item">
-            <fa-icon [icon]="faUsers" class="nav-icon"></fa-icon>
-            <span class="nav-text">Active Batches</span>
-            <span *ngIf="availableBatches > 0" class="nav-badge">{{ availableBatches }}</span>
-          </button>
-          <button 
-            [class.active]="tab==='enrollments'" 
-            (click)="tab='enrollments'"
-            class="nav-item">
-            <fa-icon [icon]="faBook" class="nav-icon"></fa-icon>
-            <span class="nav-text">My Enrollments</span>
-            <span *ngIf="myEnrollments > 0" class="nav-badge">{{ myEnrollments }}</span>
-          </button>
+        <nav class="sidebar-navigation">
+          <div class="nav-section">
+            <h3 class="nav-section-title">Learning</h3>
+            <button 
+              [class.active]="tab==='batches'" 
+              (click)="tab='batches'"
+              class="nav-item">
+              <div class="nav-item-icon">
+                <fa-icon [icon]="faUsers"></fa-icon>
+              </div>
+              <span class="nav-item-text">Active Batches</span>
+              <div class="nav-item-badge" *ngIf="availableBatches > 0">{{ availableBatches }}</div>
+              <div class="nav-item-indicator" *ngIf="tab==='batches'"></div>
+            </button>
+            
+            <button 
+              [class.active]="tab==='enrollments'" 
+              (click)="tab='enrollments'"
+              class="nav-item">
+              <div class="nav-item-icon">
+                <fa-icon [icon]="faBook"></fa-icon>
+              </div>
+              <span class="nav-item-text">My Enrollments</span>
+              <div class="nav-item-badge" *ngIf="myEnrollments > 0">{{ myEnrollments }}</div>
+              <div class="nav-item-indicator" *ngIf="tab==='enrollments'"></div>
+            </button>
+          </div>
         </nav>
       </aside>
 
-      <!-- Main content -->
-      <main class="main-content">
-        <!-- Header -->
-        <header class="content-header">
-          <div class="header-left">
-            <h1 class="page-title">{{ getPageTitle() }}</h1>
-            <p class="page-subtitle">{{ getPageSubtitle() }}</p>
+      <!-- Main Content Area -->
+      <main class="employee-main">
+        <!-- Content Area -->
+        <div class="employee-content">
+          <div class="content-wrapper">
+            <app-employee-batches *ngIf="tab==='batches'"></app-employee-batches>
+            <app-my-enrollments *ngIf="tab==='enrollments'"></app-my-enrollments>
           </div>
-          <div class="header-right">
-            <div class="stats-overview">
-              <div class="stat-item">
-                <div class="stat-value">{{ myEnrollments }}</div>
-                <div class="stat-label">Enrollments</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">{{ availableBatches }}</div>
-                <div class="stat-label">Available</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">{{ completedCourses }}</div>
-                <div class="stat-label">Completed</div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        <!-- Content Body -->
-        <div class="content-body">
-          <app-employee-batches *ngIf="tab==='batches'"></app-employee-batches>
-          <app-my-enrollments *ngIf="tab==='enrollments'"></app-my-enrollments>
         </div>
       </main>
+
+      <!-- Chatbot -->
+      <app-chatbot></app-chatbot>
     </div>
-  `,
-  styleUrls: ['./employee.style.css']
+  `
 })
 export class EmployeeDashboardComponent implements OnInit {
   tab: 'batches' | 'enrollments' = 'batches'; // Start with batches as landing page
@@ -123,13 +120,4 @@ export class EmployeeDashboardComponent implements OnInit {
     });
   }
 
-  getPageTitle(): string {
-    return this.tab === 'batches' ? 'Active Batches' : 'My Enrollments';
-  }
-
-  getPageSubtitle(): string {
-    return this.tab === 'batches' 
-      ? 'Discover and join available training batches' 
-      : 'Track your course enrollments and progress';
-  }
 }

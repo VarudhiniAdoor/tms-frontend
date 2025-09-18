@@ -1,16 +1,22 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common'; 
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { PaginationComponent } from '../components/pagination/pagination.component';
 import { BatchService } from '../services/batch.service';
 import { CourseService } from '../services/course.service';
 import { CalendarService } from '../services/calendar.service';
 import { FeedbackService } from '../services/feedback.service';
 import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.models';
+import { 
+  faPlus, faTimes, faSearch, faEdit, faTrash, faCalendarAlt, 
+  faUsers, faClock, faBook, faEye, faCheck, faTimes as faX
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-admin-calendar',
   standalone: true,  
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FontAwesomeModule, PaginationComponent],
   template: `
   <div class="admin-section">
     <!-- Section Header -->
@@ -21,7 +27,7 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       </div>
       <div class="header-actions">
         <button class="btn btn-primary" (click)="toggleCreateForm()" *ngIf="!showCreateForm">
-          <i class="icon">➕</i>
+          <fa-icon [icon]="faPlus"></fa-icon>
           Create Batch
         </button>
       </div>
@@ -30,7 +36,7 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
     <!-- Search and Filters -->
     <div class="search-section">
       <div class="search-container">
-        <i class="search-icon">🔍</i>
+        <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
         <input 
           [(ngModel)]="searchId" 
           placeholder="Search batches by name or ID..." 
@@ -38,8 +44,14 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
           (input)="onSearch()">
       </div>
       <div class="filter-stats">
-        <span class="stat">{{ activeBatches.length }} active batches</span>
+        <span class="stat">{{ getActiveBatchesCount() }} active batches</span>
         <span class="stat">{{ batches.length }} total batches</span>
+        <button 
+          class="btn btn-sm btn-outline" 
+          (click)="toggleInactiveBatches()"
+          [class.active]="showInactiveBatches">
+          {{ showInactiveBatches ? 'Hide' : 'Show' }} Inactive
+        </button>
       </div>
     </div>
 
@@ -48,7 +60,7 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       <div class="form-header">
         <h3>{{ editingBatchId ? 'Edit Batch' : 'Create New Batch' }}</h3>
         <button class="btn btn-ghost btn-sm" (click)="toggleCreateForm()">
-          <i class="icon">✕</i>
+          <fa-icon [icon]="faTimes"></fa-icon>
         </button>
       </div>
       
@@ -67,14 +79,14 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
                 </option>
               </select>
               <button type="button" class="btn btn-outline btn-sm" (click)="showCreateCalendar = !showCreateCalendar">
-                <i class="icon">➕</i>
+                <fa-icon [icon]="faPlus"></fa-icon>
                 Create Calendar
               </button>
             </div>
             <!-- Selected Calendar Info -->
             <div class="selected-calendar-info" *ngIf="batchForm.get('calendarId')?.value">
               <div class="calendar-preview">
-                <i class="icon">📅</i>
+                <fa-icon [icon]="faCalendarAlt"></fa-icon>
                 <span>{{ getSelectedCalendarInfo() }}</span>
               </div>
             </div>
@@ -164,7 +176,7 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       </div>
       
       <div class="table-container">
-        <table class="data-table" *ngIf="activeBatches.length > 0">
+        <table class="data-table" *ngIf="paginatedBatches.length > 0">
           <thead>
             <tr>
               <th>Batch Name</th>
@@ -176,10 +188,12 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let batch of activeBatches" class="data-row">
+            <tr *ngFor="let batch of paginatedBatches" class="data-row" [class.inactive-batch]="!batch.isActive">
               <td class="batch-name-cell">
                 <div class="batch-info">
-                  <div class="batch-icon">📅</div>
+                  <div class="batch-icon">
+                    <fa-icon [icon]="faCalendarAlt"></fa-icon>
+                  </div>
                   <div>
                     <div class="batch-title">{{ batch.batchName }}</div>
                     <div class="batch-id">ID: {{ batch.batchId }}</div>
@@ -211,11 +225,11 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
               </td>
               <td class="actions-cell">
                 <button class="btn btn-sm btn-ghost" (click)="toggleCreateForm(batch)">
-                  <i class="icon">✏️</i>
+                  <fa-icon [icon]="faEdit"></fa-icon>
                   Edit
                 </button>
                 <button class="btn btn-sm btn-outline btn-danger" (click)="deleteBatch(batch.batchId)">
-                  <i class="icon">🗑️</i>
+                  <fa-icon [icon]="faTrash"></fa-icon>
                   Delete
                 </button>
               </td>
@@ -223,13 +237,25 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
           </tbody>
         </table>
         
+        <!-- Pagination -->
+        <app-pagination
+          *ngIf="activeBatches.length > 0"
+          [currentPage]="currentPage"
+          [pageSize]="pageSize"
+          [totalItems]="totalItems"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
+        
         <!-- Empty State -->
         <div class="empty-state" *ngIf="activeBatches.length === 0">
-          <div class="empty-icon">📅</div>
+          <div class="empty-icon">
+            <fa-icon [icon]="faCalendarAlt"></fa-icon>
+          </div>
           <h3>No active batches</h3>
           <p>Create your first batch to get started</p>
           <button class="btn btn-primary" (click)="toggleCreateForm()">
-            <i class="icon">➕</i>
+            <fa-icon [icon]="faPlus"></fa-icon>
             Create Batch
           </button>
         </div>
@@ -240,12 +266,33 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
   styles: [`
     .admin-section {
       padding: 24px;
-      background: var(--light-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(156, 39, 176, 0.03) 30%, rgba(243, 229, 245, 0.6) 60%, rgba(248, 250, 252, 0.8) 100%);
       min-height: 100vh;
       transition: background var(--transition-normal);
+      position: relative;
+    }
+    .admin-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
     body.dark-mode .admin-section {
-      background: var(--dark-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(45, 27, 105, 0.4) 30%, rgba(17, 17, 24, 0.9) 100%);
+    }
+    body.dark-mode .admin-section::before {
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
     }
 
     .section-header {
@@ -337,6 +384,16 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       display: flex;
       gap: 16px;
       align-items: center;
+    }
+
+    .filter-stats .btn {
+      margin-left: 8px;
+    }
+
+    .filter-stats .btn.active {
+      background: var(--primary-color);
+      color: white;
+      border-color: var(--primary-color);
     }
 
     .stat {
@@ -604,6 +661,22 @@ import { Course, CourseCalendar, Batch, EnrollmentDto } from '../models/domain.m
       background: var(--dark-card-hover);
     }
 
+    .inactive-batch {
+      opacity: 0.6;
+      background: rgba(156, 163, 175, 0.1);
+    }
+    body.dark-mode .inactive-batch {
+      background: rgba(75, 85, 99, 0.2);
+    }
+
+    .inactive-batch .batch-name {
+      text-decoration: line-through;
+      color: #6b7280;
+    }
+    body.dark-mode .inactive-batch .batch-name {
+      color: #9ca3af;
+    }
+
     .data-row td {
       padding: 16px 20px;
       color: var(--light-text);
@@ -808,9 +881,32 @@ export class AdminCalendarComponent implements OnInit {
   calendars: CourseCalendar[] = [];
   batches: Batch[] = [];
   activeBatches: Batch[] = [];
+  paginatedBatches: Batch[] = [];
   selectedEnrollments: EnrollmentDto[] = [];
   selectedBatchId: number | null = null;
   feedbacks: any[] = [];
+
+  // Pagination properties
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
+
+  // Filter properties
+  showInactiveBatches = false;
+
+  // FontAwesome Icons
+  faPlus = faPlus;
+  faTimes = faTimes;
+  faSearch = faSearch;
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faCalendarAlt = faCalendarAlt;
+  faUsers = faUsers;
+  faClock = faClock;
+  faBook = faBook;
+  faEye = faEye;
+  faCheck = faCheck;
+  faX = faX;
 
   searchId = '';
   showCreateForm = false;
@@ -847,9 +943,59 @@ export class AdminCalendarComponent implements OnInit {
     this.calSvc.getAll().subscribe(cals => this.calendars = cals);
     this.batchSvc.getAll().subscribe(b => {
       this.batches = b;
-      this.activeBatches = b.filter(x => x.isActive);
+      // Automatically deactivate batches that have ended
+      this.batches = this.batches.map(batch => {
+        if (batch.calendar?.endDate) {
+          const endDate = new Date(batch.calendar.endDate);
+          const today = new Date();
+          // If batch has ended, mark as inactive
+          if (endDate < today && batch.isActive !== false) {
+            batch.isActive = false;
+          }
+        }
+        // Ensure isActive is defined (default to true if undefined)
+        if (batch.isActive === undefined) {
+          batch.isActive = true;
+        }
+        return batch;
+      });
+      this.updateActiveBatches();
+      this.updatePagination();
     });
     this.feedbackSvc.getAll().subscribe(f => this.feedbacks = f);
+  }
+
+  updateActiveBatches() {
+    if (this.showInactiveBatches) {
+      this.activeBatches = this.batches; // Show all batches
+    } else {
+      this.activeBatches = this.batches.filter(x => x.isActive === true); // Show only active batches
+    }
+  }
+
+  toggleInactiveBatches() {
+    this.showInactiveBatches = !this.showInactiveBatches;
+    this.updateActiveBatches();
+    this.currentPage = 1; // Reset to first page
+    this.updatePagination();
+  }
+
+  updatePagination() {
+    this.totalItems = this.activeBatches.length;
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedBatches = this.activeBatches.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePagination();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1;
+    this.updatePagination();
   }
 
   toggleCreateForm(batch?: Batch) {
@@ -936,15 +1082,22 @@ export class AdminCalendarComponent implements OnInit {
  onSearch() {
   const searchTerm = this.searchId.trim().toLowerCase();
   if (!searchTerm) {
-    // If search is empty, show all active batches
-    this.activeBatches = this.batches.filter(b => b.isActive);
-    return;
+    // If search is empty, show batches based on current filter
+    this.updateActiveBatches();
+  } else {
+    // Filter by search term and current filter
+    const baseBatches = this.showInactiveBatches ? this.batches : this.batches.filter(b => b.isActive === true);
+    this.activeBatches = baseBatches.filter(b =>
+      b.batchName?.toLowerCase().includes(searchTerm)
+    );
   }
-
-  this.activeBatches = this.batches.filter(b =>
-    b.batchName?.toLowerCase().includes(searchTerm)
-  );
+  this.currentPage = 1; // Reset to first page when searching
+  this.updatePagination();
 }
+
+  getActiveBatchesCount(): number {
+    return this.batches.filter(b => b.isActive === true).length;
+  }
 
   getDurationDays(batch: Batch): number {
     if (!batch.calendar?.startDate || !batch.calendar?.endDate) {

@@ -4,9 +4,10 @@ import { FormGroup, FormControl, Validators, FormsModule, ReactiveFormsModule } 
 import { CourseService } from '../services/course.service';
 import { Course } from '../models/domain.models';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
+import { PaginationComponent } from '../components/pagination/pagination.component';
 import { 
   faBook, faPlus, faSearch, faEdit, faTrash, faClock, 
-  faUsers, faStar, faEye, faEllipsisV, faPlay, faPause
+  faUsers, faStar, faEye, faEllipsisV, faPlay, faPause, faTimes
 } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -21,7 +22,7 @@ import {
         </div>
         <div class="header-actions">
         <button class="btn btn-primary" (click)="addCourse()">
-            <i class="icon">➕</i>
+          <fa-icon [icon]="faPlus"></fa-icon>
           Add Course
         </button>
         </div>
@@ -32,7 +33,7 @@ import {
         <div class="form-header">
           <h3>{{ isEditMode ? 'Edit Course' : 'Add New Course' }}</h3>
           <button class="btn btn-ghost btn-sm" (click)="closeModal()">
-            <i class="icon">✕</i>
+            <fa-icon [icon]="faTimes"></fa-icon>
           </button>
         </div>
         
@@ -107,7 +108,7 @@ import {
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let course of courses" class="data-row">
+              <tr *ngFor="let course of paginatedCourses" class="data-row">
                 <td class="id-cell">{{ course.courseId }}</td>
                 <td class="course-cell">
                   <div class="course-info">
@@ -126,11 +127,11 @@ import {
                 <td class="description-cell">{{ course.description || 'No description available' }}</td>
                 <td class="actions-cell">
                   <button class="btn btn-sm btn-ghost" (click)="editCourse(course)">
-                    <i class="icon">✏️</i>
+                    <fa-icon [icon]="faEdit"></fa-icon>
                     Edit
                   </button>
                   <button class="btn btn-sm btn-outline btn-danger" (click)="deleteCourse(course.courseId)">
-                    <i class="icon">🗑️</i>
+                    <fa-icon [icon]="faTrash"></fa-icon>
                     Delete
                   </button>
                 </td>
@@ -140,17 +141,46 @@ import {
         </div>
       </div>
 
+      <!-- Pagination -->
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     </div>
   `,
   styles: [`
     .admin-section {
       padding: 24px;
-      background: var(--light-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(156, 39, 176, 0.03) 30%, rgba(243, 229, 245, 0.6) 60%, rgba(248, 250, 252, 0.8) 100%);
       min-height: 100vh;
       transition: background var(--transition-normal);
+      position: relative;
+    }
+    .admin-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
     body.dark-mode .admin-section {
-      background: var(--dark-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(45, 27, 105, 0.4) 30%, rgba(17, 17, 24, 0.9) 100%);
+    }
+    body.dark-mode .admin-section::before {
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
     }
 
     .section-header {
@@ -191,17 +221,22 @@ import {
     }
 
     .form-card {
-      background: var(--light-card);
-      border: 1px solid var(--light-border);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(243, 229, 245, 0.8) 50%, rgba(248, 250, 252, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(99, 102, 241, 0.2);
       border-radius: 12px;
       padding: 24px;
       margin-bottom: 24px;
-      box-shadow: var(--shadow-sm);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.15);
       transition: all var(--transition-normal);
+      position: relative;
+      z-index: 1;
     }
     body.dark-mode .form-card {
-      background: var(--dark-card);
-      border-color: var(--dark-border);
+      background: linear-gradient(135deg, rgba(26, 26, 36, 0.95) 0%, rgba(45, 27, 105, 0.6) 50%, rgba(17, 17, 24, 0.9) 100%);
+      backdrop-filter: blur(10px);
+      border-color: rgba(99, 102, 241, 0.3);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
     }
 
     .form-header {
@@ -505,10 +540,11 @@ import {
     }
   `],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, FontAwesomeModule]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, FontAwesomeModule, PaginationComponent]
 })
 export class AdminCoursesComponent implements OnInit {
   courses: Course[] = [];
+  paginatedCourses: Course[] = [];
   activeMenuId: number | null = null;
   courseForm: FormGroup;
   courseMsg: string = '';
@@ -516,8 +552,13 @@ export class AdminCoursesComponent implements OnInit {
   showModal: boolean = false;
   isEditMode: boolean = false;
   editingCourse: Course | null = null;
+  
+  // Pagination properties
+  currentPage: number = 1;
+  pageSize: number = 6;
+  totalItems: number = 0;
 
-  // Icons
+  // FontAwesome Icons
   faBook = faBook;
   faPlus = faPlus;
   faSearch = faSearch;
@@ -530,6 +571,7 @@ export class AdminCoursesComponent implements OnInit {
   faEllipsisV = faEllipsisV;
   faPlay = faPlay;
   faPause = faPause;
+  faTimes = faTimes;
 
   constructor(private courseService: CourseService) {
     this.courseForm = new FormGroup({
@@ -548,6 +590,8 @@ export class AdminCoursesComponent implements OnInit {
     this.courseService.getAll().subscribe({
       next: (courses: Course[]) => {
         this.courses = courses;
+        this.totalItems = courses.length;
+        this.updatePaginatedCourses();
         this.isLoading = false;
       },
       error: (error: any) => {
@@ -556,6 +600,23 @@ export class AdminCoursesComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  updatePaginatedCourses(): void {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedCourses = this.courses.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.updatePaginatedCourses();
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.currentPage = 1; // Reset to first page
+    this.updatePaginatedCourses();
   }
 
   toggleMenu(courseId: number): void {
@@ -654,8 +715,12 @@ export class AdminCoursesComponent implements OnInit {
           }
         });
       } else {
-        // Create new course
-        this.courseService.create(courseData).subscribe({
+        // Create new course with timestamp
+        const courseWithTimestamp = {
+          ...courseData,
+          createdOn: new Date().toISOString()
+        };
+        this.courseService.create(courseWithTimestamp).subscribe({
           next: () => {
             this.loadCourses();
             this.closeModal();

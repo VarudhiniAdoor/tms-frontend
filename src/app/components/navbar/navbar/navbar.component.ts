@@ -18,7 +18,7 @@ import {
   template: `
   <nav class="nav">
     <a routerLink="/" class="brand">
-      <fa-icon [icon]="faGraduationCap" class="brand-icon"></fa-icon>
+      <img src="assets/logo.svg" alt="TMS Logo" class="brand-logo">
       <span class="brand-text">TMS</span>
     </a>
     
@@ -120,6 +120,46 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.drawer.open();
   }
 }
+
+// Add styles for the brand logo
+@Component({
+  selector: 'app-navbar-styles',
+  template: '',
+  styles: [`
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-decoration: none;
+      color: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .brand:hover {
+      transform: translateY(-1px);
+    }
+
+    .brand-logo {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+    }
+
+    .brand-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #1f2937;
+      letter-spacing: -0.01em;
+    }
+
+    body.dark-mode .brand-text {
+      color: #f9fafb;
+    }
+  `]
+})
+export class NavbarStylesComponent {}
+
 
 
 

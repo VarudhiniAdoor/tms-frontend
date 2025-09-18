@@ -3,9 +3,14 @@ import {
 } from "./chunk-XXEGCXZV.js";
 import "./chunk-46HAYV32.js";
 import {
+  MatCommonModule
+} from "./chunk-RVHUOBH2.js";
+import "./chunk-SV4TNZLU.js";
+import {
   ScrollingModule,
   ViewportRuler
-} from "./chunk-OC4B4TMU.js";
+} from "./chunk-NO24L5G5.js";
+import "./chunk-7UJZXIJQ.js";
 import {
   DataSource,
   _RecycleViewRepeaterStrategy,
@@ -13,11 +18,6 @@ import {
   _ViewRepeaterOperation,
   isDataSource
 } from "./chunk-OL6LQQHN.js";
-import "./chunk-7UJZXIJQ.js";
-import {
-  MatCommonModule
-} from "./chunk-BC7M5OPE.js";
-import "./chunk-SV4TNZLU.js";
 import {
   Directionality
 } from "./chunk-MN2GU4AA.js";

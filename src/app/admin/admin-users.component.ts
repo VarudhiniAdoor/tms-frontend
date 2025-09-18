@@ -1,12 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormGroup, FormControl, Validators } from '@angular/forms';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services/user.service';
+import { PaginationComponent } from '../components/pagination/pagination.component';
+import { 
+  faEdit, faTrash, faPlus, faTimes, faUser, faUserTie, faEnvelope, faIdCard, faCrown, faUserCheck
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, FontAwesomeModule],
   template: `
   <div class="admin-section">
     <!-- Section Header -->
@@ -17,7 +22,7 @@ import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services
       </div>
       <div class="header-actions">
         <button class="btn btn-primary" (click)="toggleAddForm()" *ngIf="!showAddForm">
-          <i class="icon">➕</i>
+          <fa-icon [icon]="faPlus"></fa-icon>
           Add User
         </button>
       </div>
@@ -28,7 +33,7 @@ import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services
       <div class="form-header">
         <h3>{{ editingUserId ? 'Edit User' : 'Add New User' }}</h3>
         <button class="btn btn-ghost btn-sm" (click)="toggleAddForm()">
-          <i class="icon">✕</i>
+          <fa-icon [icon]="faTimes"></fa-icon>
         </button>
       </div>
       
@@ -136,76 +141,85 @@ import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services
         <table class="data-table">
     <thead>
       <tr>
-        <th>ID</th>
-        <th>Username</th>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Role</th>
-        <th>Manager</th>
-        <th>Actions</th>
+        <th class="id-column">
+          <fa-icon [icon]="faIdCard"></fa-icon>
+          ID
+        </th>
+        <th class="user-column">
+          <fa-icon [icon]="faUser"></fa-icon>
+          User
+        </th>
+        <th class="email-column">
+          <fa-icon [icon]="faEnvelope"></fa-icon>
+          Email
+        </th>
+        <th class="role-column">
+          <fa-icon [icon]="faCrown"></fa-icon>
+          Role
+        </th>
+        <th class="manager-column">
+          <fa-icon [icon]="faUserTie"></fa-icon>
+          Manager
+        </th>
+        <th class="actions-column">Actions</th>
       </tr>
     </thead>
     <tbody>
-      <!-- Managers -->
-            <tr *ngFor="let m of managers" class="data-row">
-              <td class="id-cell">{{ m.userId }}</td>
-              <td class="username-cell">
+      <!-- Users -->
+            <tr *ngFor="let user of paginatedUsers" class="data-row">
+              <td class="id-cell">{{ user.userId }}</td>
+              <td class="user-cell">
                 <div class="user-info">
-                  <div class="user-avatar">{{ m.username.charAt(0).toUpperCase() }}</div>
-                  <span>{{ m.username }}</span>
+                  <div class="user-avatar">
+                    <fa-icon [icon]="'manager' in user ? faUser : faUserTie"></fa-icon>
+                  </div>
+                  <div class="user-details">
+                    <div class="username">{{ user.username }}</div>
+                    <div class="fullname">{{ user.firstName }} {{ user.lastName }}</div>
+                  </div>
                 </div>
               </td>
-        <td>{{ m.firstName }} {{ m.lastName }}</td>
-        <td>{{ m.email }}</td>
-              <td>
-                <span class="role-badge manager">Manager</span>
+              <td class="email-cell">{{ user.email || 'No email' }}</td>
+              <td class="role-cell">
+                <span class="role-badge" [class.manager]="!('manager' in user)" [class.employee]="'manager' in user">
+                  <fa-icon [icon]="'manager' in user ? faUser : faUserTie"></fa-icon>
+                  {{ 'manager' in user ? 'Employee' : 'Manager' }}
+                </span>
               </td>
-        <td>-</td>
+              <td class="manager-cell">
+                <span *ngIf="'manager' in user && user.manager" class="manager-name">
+                  <fa-icon [icon]="faUserTie"></fa-icon>
+                  {{ user.manager.username }}
+                </span>
+                <span *ngIf="!('manager' in user) || !user.manager" class="unassigned">
+                  <fa-icon [icon]="faUserCheck"></fa-icon>
+                  Self-managed
+                </span>
+              </td>
               <td class="actions-cell">
-                <button class="btn btn-sm btn-ghost" (click)="startEdit(m)">
-                  <i class="icon">✏️</i>
-                  Edit
-                </button>
-                <button class="btn btn-sm btn-outline btn-danger" (click)="deleteUser(m.userId)">
-                  <i class="icon">🗑️</i>
-                  Delete
-                </button>
-        </td>
-      </tr>
-
-      <!-- Employees -->
-            <tr *ngFor="let e of employees" class="data-row">
-              <td class="id-cell">{{ e.userId }}</td>
-              <td class="username-cell">
-                <div class="user-info">
-                  <div class="user-avatar">{{ e.username.charAt(0).toUpperCase() }}</div>
-                  <span>{{ e.username }}</span>
+                <div class="action-buttons">
+                  <button class="btn btn-sm btn-edit" (click)="startEdit(user)" title="Edit User">
+                    <fa-icon [icon]="faEdit"></fa-icon>
+                  </button>
+                  <button class="btn btn-sm btn-delete" (click)="deleteUser(user.userId)" title="Delete User">
+                    <fa-icon [icon]="faTrash"></fa-icon>
+                  </button>
                 </div>
-              </td>
-        <td>{{ e.firstName }} {{ e.lastName }}</td>
-        <td>{{ e.email }}</td>
-        <td>
-                <span class="role-badge employee">Employee</span>
-        </td>
-        <td>
-                <span *ngIf="e.manager" class="manager-name">{{ e.manager.username }}</span>
-                <span *ngIf="!e.manager" class="unassigned">Unassigned</span>
-              </td>
-              <td class="actions-cell">
-                <button class="btn btn-sm btn-ghost" (click)="startEdit(e)">
-                  <i class="icon">✏️</i>
-                  Edit
-                </button>
-                <button class="btn btn-sm btn-outline btn-danger" (click)="deleteUser(e.userId)">
-                  <i class="icon">🗑️</i>
-                  Delete
-                </button>
         </td>
       </tr>
     </tbody>
   </table>
       </div>
     </div>
+
+    <!-- Pagination -->
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="totalItems"
+      [pageSize]="pageSize"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)">
+    </app-pagination>
   </div>
   `,
   styles: [`
@@ -587,9 +601,28 @@ import { UserService, ManagerDto, EmployeeDto, CreateUserDto } from '../services
 export class AdminUsersComponent implements OnInit {
   managers: ManagerDto[] = [];
   employees: EmployeeDto[] = [];
+  allUsers: (ManagerDto | EmployeeDto)[] = [];
+  paginatedUsers: (ManagerDto | EmployeeDto)[] = [];
   showAddForm = false;
   formMsg = '';
   editingUserId: number | null = null;
+  
+  // Pagination properties
+  currentPage: number = 1;
+  pageSize: number = 6;
+  totalItems: number = 0;
+
+  // FontAwesome Icons
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faPlus = faPlus;
+  faTimes = faTimes;
+  faUser = faUser;
+  faUserTie = faUserTie;
+  faEnvelope = faEnvelope;
+  faIdCard = faIdCard;
+  faCrown = faCrown;
+  faUserCheck = faUserCheck;
 
   userForm = new FormGroup({
     username: new FormControl('', Validators.required),
@@ -614,16 +647,45 @@ export class AdminUsersComponent implements OnInit {
 
   loadManagers() {
     this.userSvc.getManagers().subscribe({
-      next: list => this.managers = list,
+      next: list => {
+        this.managers = list;
+        this.updateAllUsers();
+      },
       error: err => console.error(err)
     });
   }
 
   loadEmployees() {
     this.userSvc.getEmployees().subscribe({
-      next: list => this.employees = list,
+      next: list => {
+        this.employees = list;
+        this.updateAllUsers();
+      },
       error: err => console.error(err)
     });
+  }
+
+  updateAllUsers() {
+    this.allUsers = [...this.managers, ...this.employees];
+    this.totalItems = this.allUsers.length;
+    this.updatePaginatedUsers();
+  }
+
+  updatePaginatedUsers() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedUsers = this.allUsers.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePaginatedUsers();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1; // Reset to first page
+    this.updatePaginatedUsers();
   }
 
   toggleAddForm() {

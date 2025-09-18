@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["angular:styles/component:css;48b1873a316df89190a293715baaae250e1f2eb074af3a5550341b63329ba7a7;C:/Users/hp/source/repos/Project/Angular/new 6/frontendtm1.2/tms-frontend/src/app/components/navbar/navbar/navbar.component.ts"],
+  "sourcesContent": ["\n    .brand {\n      display: flex;\n      align-items: center;\n      gap: 4px;\n      text-decoration: none;\n      color: inherit;\n      transition: all 0.3s ease;\n    }\n\n    .brand:hover {\n      transform: translateY(-1px);\n    }\n\n    .brand-logo {\n      width: 16px;\n      height: 16px;\n      object-fit: contain;\n      filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));\n    }\n\n    .brand-text {\n      font-size: 0.9rem;\n      font-weight: 600;\n      color: #1f2937;\n      letter-spacing: -0.01em;\n    }\n\n    body.dark-mode .brand-text {\n      color: #f9fafb;\n    }\n  "],
+  "mappings": ";AACI,CAAC;AACC,WAAS;AACT,eAAa;AACb,OAAK;AACL,mBAAiB;AACjB,SAAO;AACP,cAAY,IAAI,KAAK;AACvB;AAEA,CATC,KASK;AACJ,aAAW,WAAW;AACxB;AAEA,CAAC;AACC,SAAO;AACP,UAAQ;AACR,cAAY;AACZ,UAAQ,YAAY,EAAE,IAAI,IAAI,KAAK,CAAC,EAAE,CAAC,EAAE,CAAC,EAAE;AAC9C;AAEA,CAAC;AACC,aAAW;AACX,eAAa;AACb,SAAO;AACP,kBAAgB;AAClB;AAEA,IAAI,CAAC,UAAU,CAPd;AAQC,SAAO;AACT;",
+  "names": []
+}

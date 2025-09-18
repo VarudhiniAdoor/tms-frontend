@@ -20,12 +20,14 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatRippleModule } from '@angular/material/core';
 import { animate, style, transition, trigger, state } from '@angular/animations';
+import { PaginationComponent } from '../../pagination/pagination.component';
 import { EnrollmentService } from '../../../services/enrollment.service';
 import { EnrollmentDto } from '../../../models/domain.models';
 
 @Component({
   selector: 'app-enrollment',
   standalone: true,
+  styleUrls: ['./manager-dashboard.css'],
   imports: [
     CommonModule, 
     FormsModule,
@@ -46,7 +48,8 @@ import { EnrollmentDto } from '../../../models/domain.models';
     MatFormFieldModule,
     MatSelectModule,
     MatMenuModule,
-    MatRippleModule
+    MatRippleModule,
+    PaginationComponent
   ],
   animations: [
     trigger('fadeIn', [
@@ -75,28 +78,50 @@ import { EnrollmentDto } from '../../../models/domain.models';
   ],
   template: `
 <div class="enrollment-container" [@fadeIn]>
-  <!-- Header Section -->
-  <div class="header-section">
+  <!-- Professional Section Header -->
+  <div class="manager-section-header">
     <div class="header-content">
-      <h1 class="page-title">
-        <mat-icon class="title-icon">school</mat-icon>
-        Enrollment Management
-      </h1>
-      <div class="header-actions">
-        <mat-chip-listbox>
-          <mat-chip-option [selected]="true">
-            <mat-icon matChipAvatar>pending</mat-icon>
-            Pending ({{pending.length}})
-          </mat-chip-option>
-          <mat-chip-option>
-            <mat-icon matChipAvatar>check_circle</mat-icon>
-            Approved ({{approved.length}})
-          </mat-chip-option>
-          <mat-chip-option>
-            <mat-icon matChipAvatar>cancel</mat-icon>
-            Rejected ({{rejected.length}})
-          </mat-chip-option>
-        </mat-chip-listbox>
+      <div class="header-left">
+        <h1 class="section-title">Enrollment Management</h1>
+        <p class="section-description">Manage employee enrollments, approve requests, and track training progress across all batches</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat-button total">
+          <div class="stat-icon">
+            <i class="material-icons">assignment</i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ enrollments.length }}</span>
+            <span class="stat-label">Total Enrollments</span>
+          </div>
+        </div>
+        <div class="stat-button approved">
+          <div class="stat-icon">
+            <i class="material-icons">check_circle</i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ getApprovedCount() }}</span>
+            <span class="stat-label">Approved</span>
+          </div>
+        </div>
+        <div class="stat-button pending">
+          <div class="stat-icon">
+            <i class="material-icons">pending</i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ getPendingCount() }}</span>
+            <span class="stat-label">Pending</span>
+          </div>
+        </div>
+        <div class="stat-button rejected">
+          <div class="stat-icon">
+            <i class="material-icons">cancel</i>
+          </div>
+          <div class="stat-content">
+            <span class="stat-value">{{ getRejectedCount() }}</span>
+            <span class="stat-label">Rejected</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -126,47 +151,64 @@ import { EnrollmentDto } from '../../../models/domain.models';
           <p>All enrollment requests have been processed.</p>
         </div>
 
-        <div *ngFor="let r of pending; trackBy: trackByEnrollmentId" 
+        <div *ngFor="let r of paginatedPending; trackBy: trackByEnrollmentId" 
              class="enrollment-card pending-card" 
              [@fadeIn]
              (mouseenter)="onCardHover($event, true)"
              (mouseleave)="onCardHover($event, false)">
-          <div class="card-content">
-            <div class="employee-info">
-              <div class="avatar">
-                <mat-icon>person</mat-icon>
-              </div>
-              <div class="info-text">
-                <h4 class="employee-name">{{r.employeeName}}</h4>
-                <p class="course-info">
-                  <mat-icon class="info-icon">book</mat-icon>
-                  {{r.courseName}}
-                </p>
-                <p class="batch-info">
-                  <mat-icon class="info-icon">group</mat-icon>
-                  {{r.batchName}}
-                </p>
+          <div class="card-header">
+            <div class="employee-avatar">
+              <mat-icon>person</mat-icon>
+            </div>
+            <div class="employee-details">
+              <h4 class="employee-name">{{r.employeeName}}</h4>
+              <div class="enrollment-meta">
+                <span class="enrollment-id">#{{r.enrollmentId}}</span>
+                <span class="enrollment-date">{{r.createdAt | date:'MMM dd, yyyy'}}</span>
               </div>
             </div>
+            <div class="status-badge pending">
+              <mat-icon>pending</mat-icon>
+              <span>Pending</span>
+            </div>
+          </div>
 
-            <div class="card-actions">
-              <button mat-raised-button 
-                      color="primary" 
-                      class="action-button approve-button"
-                      (click)="approve(r.enrollmentId)"
-                      [disabled]="processingId === r.enrollmentId">
-                <mat-icon>check</mat-icon>
-                Approve
-              </button>
-              <button mat-stroked-button 
-                      color="warn" 
-                      class="action-button reject-button"
-                      (click)="toggleReject(r.enrollmentId)"
-                      [disabled]="processingId === r.enrollmentId">
-                <mat-icon>close</mat-icon>
-                Reject
-              </button>
+          <div class="card-body">
+            <div class="course-info">
+              <div class="info-item">
+                <mat-icon class="info-icon">book</mat-icon>
+                <div class="info-content">
+                  <span class="info-label">Course</span>
+                  <span class="info-value">{{r.courseName}}</span>
+                </div>
+              </div>
+              <div class="info-item">
+                <mat-icon class="info-icon">group</mat-icon>
+                <div class="info-content">
+                  <span class="info-label">Batch</span>
+                  <span class="info-value">{{r.batchName}}</span>
+                </div>
+              </div>
             </div>
+          </div>
+
+          <div class="card-actions">
+            <button mat-raised-button 
+                    color="primary" 
+                    class="action-button approve-button"
+                    (click)="approve(r.enrollmentId)"
+                    [disabled]="processingId === r.enrollmentId">
+              <mat-icon>check</mat-icon>
+              <span>Approve</span>
+            </button>
+            <button mat-stroked-button 
+                    color="warn" 
+                    class="action-button reject-button"
+                    (click)="toggleReject(r.enrollmentId)"
+                    [disabled]="processingId === r.enrollmentId">
+              <mat-icon>close</mat-icon>
+              <span>Reject</span>
+            </button>
           </div>
 
           <!-- Reject Reason Input -->
@@ -206,6 +248,16 @@ import { EnrollmentDto } from '../../../models/domain.models';
             </div>
           </mat-expansion-panel>
         </div>
+
+        <!-- Pagination for Pending -->
+        <app-pagination
+          *ngIf="pending.length > 0"
+          [currentPage]="pendingPage"
+          [totalItems]="pendingTotal"
+          [pageSize]="pageSize"
+          (pageChange)="onPendingPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
       </mat-card-content>
     </mat-card>
 
@@ -223,7 +275,7 @@ import { EnrollmentDto } from '../../../models/domain.models';
               </div>
 
               <div *ngIf="approved.length > 0" class="table-container">
-                <table mat-table [dataSource]="approved" class="results-table">
+                <table mat-table [dataSource]="paginatedApproved" class="results-table">
                   <ng-container matColumnDef="employee">
                     <th mat-header-cell *matHeaderCellDef>Employee</th>
                     <td mat-cell *matCellDef="let element">
@@ -254,12 +306,12 @@ import { EnrollmentDto } from '../../../models/domain.models';
                     </td>
                   </ng-container>
 
-                  <ng-container matColumnDef="approvedBy">
-                    <th mat-header-cell *matHeaderCellDef>Approved By</th>
+                  <ng-container matColumnDef="status">
+                    <th mat-header-cell *matHeaderCellDef>Status</th>
                     <td mat-cell *matCellDef="let element">
-                      <mat-chip class="approver-chip">
-                        <mat-icon matChipAvatar>verified</mat-icon>
-                        {{element.approvedBy}}
+                      <mat-chip class="status-chip approved">
+                        <mat-icon matChipAvatar>check_circle</mat-icon>
+                        Approved
                       </mat-chip>
                     </td>
                   </ng-container>
@@ -267,6 +319,16 @@ import { EnrollmentDto } from '../../../models/domain.models';
                   <tr mat-header-row *matHeaderRowDef="approvedColumns"></tr>
                   <tr mat-row *matRowDef="let row; columns: approvedColumns;" [@fadeIn]></tr>
                 </table>
+
+                <!-- Pagination for Approved -->
+                <app-pagination
+                  *ngIf="approved.length > 0"
+                  [currentPage]="approvedPage"
+                  [totalItems]="approvedTotal"
+                  [pageSize]="pageSize"
+                  (pageChange)="onApprovedPageChange($event)"
+                  (pageSizeChange)="onPageSizeChange($event)">
+                </app-pagination>
               </div>
             </mat-card-content>
           </mat-card>
@@ -285,7 +347,7 @@ import { EnrollmentDto } from '../../../models/domain.models';
               </div>
 
               <div *ngIf="rejected.length > 0" class="table-container">
-                <table mat-table [dataSource]="rejected" class="results-table">
+                <table mat-table [dataSource]="paginatedRejected" class="results-table">
                   <ng-container matColumnDef="employee">
                     <th mat-header-cell *matHeaderCellDef>Employee</th>
                     <td mat-cell *matCellDef="let element">
@@ -316,15 +378,6 @@ import { EnrollmentDto } from '../../../models/domain.models';
                     </td>
                   </ng-container>
 
-                  <ng-container matColumnDef="rejectedBy">
-                    <th mat-header-cell *matHeaderCellDef>Rejected By</th>
-                    <td mat-cell *matCellDef="let element">
-                      <mat-chip class="rejector-chip">
-                        <mat-icon matChipAvatar>block</mat-icon>
-                        {{element.approvedBy}}
-                      </mat-chip>
-                    </td>
-                  </ng-container>
 
                   <ng-container matColumnDef="reason">
                     <th mat-header-cell *matHeaderCellDef>Reason</th>
@@ -336,6 +389,16 @@ import { EnrollmentDto } from '../../../models/domain.models';
                   <tr mat-header-row *matHeaderRowDef="rejectedColumns"></tr>
                   <tr mat-row *matRowDef="let row; columns: rejectedColumns;" [@fadeIn]></tr>
                 </table>
+
+                <!-- Pagination for Rejected -->
+                <app-pagination
+                  *ngIf="rejected.length > 0"
+                  [currentPage]="rejectedPage"
+                  [totalItems]="rejectedTotal"
+                  [pageSize]="pageSize"
+                  (pageChange)="onRejectedPageChange($event)"
+                  (pageSizeChange)="onPageSizeChange($event)">
+                </app-pagination>
               </div>
             </mat-card-content>
           </mat-card>
@@ -347,47 +410,57 @@ import { EnrollmentDto } from '../../../models/domain.models';
   `,
   styles: [`
     .enrollment-container {
-      padding: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
-      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-      min-height: 100vh;
-    }
-
-    .header-section {
-      margin-bottom: 32px;
-    }
-
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-    }
-
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 12px;
+      padding: 0;
+      max-width: 100%;
       margin: 0;
-      font-size: 2.5rem;
-      font-weight: 300;
-      color: #2c3e50;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      background: transparent;
+      min-height: auto;
     }
 
-    .title-icon {
-      font-size: 2.5rem;
-      width: 2.5rem;
-      height: 2.5rem;
-      color: #3498db;
+    .status-overview {
+      margin-bottom: 24px;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
-    .header-actions {
+    .status-chips {
       display: flex;
-      gap: 16px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .status-chip {
+      display: flex;
       align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+
+    .status-chip.pending {
+      background: #f1f5f9;
+      color: #64748b;
+    }
+
+    .status-chip.approved {
+      background: #f0fdf4;
+      color: #16a34a;
+    }
+
+    .status-chip.rejected {
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    .status-chip mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
     }
 
     .loading-container {
@@ -412,40 +485,40 @@ import { EnrollmentDto } from '../../../models/domain.models';
     }
 
     .section-card {
-      border-radius: 16px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-      border: none;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
       overflow: hidden;
       transition: all 0.3s ease;
     }
 
     .section-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .pending-section {
-      background: linear-gradient(135deg, #fff 0%, #f8f9fa 100%);
+      background: white;
     }
 
     .section-title {
       display: flex;
       align-items: center;
       gap: 12px;
-      font-size: 1.5rem;
-      font-weight: 500;
-      color: #2c3e50;
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #1a202c;
       margin: 0;
     }
 
     .section-icon {
-      font-size: 1.5rem;
-      width: 1.5rem;
-      height: 1.5rem;
+      font-size: 1.25rem;
+      width: 1.25rem;
+      height: 1.25rem;
     }
 
     .section-icon.pending {
-      color: #f39c12;
+      color: #64748b;
     }
 
     .empty-state {
@@ -475,85 +548,168 @@ import { EnrollmentDto } from '../../../models/domain.models';
 
     .enrollment-card {
       background: white;
-      border-radius: 12px;
+      border-radius: 8px;
       margin-bottom: 16px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
       transition: all 0.3s ease;
       overflow: hidden;
-      border-left: 4px solid #f39c12;
+      position: relative;
+    }
+
+    .enrollment-card.pending-card {
+      border-left: 4px solid #fbbf24;
+      border-bottom: 2px solid #f3f4f6;
+    }
+
+    .enrollment-card.pending-card:not(:last-child) {
+      border-bottom: 2px solid #e5e7eb;
     }
 
     .enrollment-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
     .enrollment-card[data-hover="true"] {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     }
 
-    .card-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 20px;
-      gap: 16px;
-    }
-
-    .employee-info {
+    .card-header {
       display: flex;
       align-items: center;
       gap: 16px;
-      flex: 1;
+      padding: 20px 24px 16px 24px;
+      border-bottom: 1px solid #f1f5f9;
     }
 
-    .avatar {
+    .employee-avatar {
       width: 48px;
       height: 48px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #3498db, #2980b9);
+      border-radius: 8px;
+      background: #f1f5f9;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: white;
-      font-size: 1.5rem;
+      color: #64748b;
+      font-size: 20px;
+      flex-shrink: 0;
+      border: 1px solid #e2e8f0;
     }
 
-    .info-text {
+    .employee-details {
       flex: 1;
     }
 
     .employee-name {
       margin: 0 0 8px 0;
-      font-size: 1.2rem;
-      font-weight: 500;
-      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+      color: #1a202c;
     }
 
-    .course-info, .batch-info {
+    .enrollment-meta {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .enrollment-id {
+      font-size: 12px;
+      color: #64748b;
+      background: #f1f5f9;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-weight: 500;
+    }
+
+    .enrollment-date {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .status-badge {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin: 4px 0;
-      color: #666;
-      font-size: 0.95rem;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .status-badge.pending {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid #fbbf24;
+    }
+
+    .status-badge mat-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+
+    .status-badge.pending mat-icon {
+      color: #d97706;
+    }
+
+    .card-body {
+      padding: 16px 24px;
+    }
+
+    .course-info {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .info-icon {
-      font-size: 1rem;
-      width: 1rem;
-      height: 1rem;
-      color: #95a5a6;
+      font-size: 18px;
+      color: #94a3b8;
+      width: 20px;
+      text-align: center;
+    }
+
+    .info-content {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #64748b;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 14px;
+      color: #1a202c;
+      font-weight: 500;
     }
 
     .card-actions {
       display: flex;
       gap: 12px;
-      align-items: center;
+      padding: 16px 24px 20px 24px;
+      background: #fafbfc;
+      border-top: 1px solid #f1f5f9;
     }
 
     .action-button {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       min-width: 120px;
       height: 40px;
       border-radius: 8px;
@@ -561,27 +717,33 @@ import { EnrollmentDto } from '../../../models/domain.models';
       text-transform: none;
       letter-spacing: 0.5px;
       transition: all 0.3s ease;
+      flex: 1;
+      justify-content: center;
     }
 
     .approve-button {
-      background: linear-gradient(135deg, #27ae60, #2ecc71);
+      background: #10b981;
       color: white;
+      border: none;
     }
 
     .approve-button:hover:not(:disabled) {
-      background: linear-gradient(135deg, #229954, #27ae60);
-      transform: translateY(-2px);
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);
     }
 
     .reject-button {
-      border-color: #e74c3c;
-      color: #e74c3c;
+      background: #f8fafc;
+      color: #64748b;
+      border: 1px solid #e2e8f0;
     }
 
     .reject-button:hover:not(:disabled) {
-      background: #e74c3c;
-      color: white;
-      transform: translateY(-2px);
+      background: #f1f5f9;
+      color: #374151;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .reject-panel {
@@ -610,8 +772,9 @@ import { EnrollmentDto } from '../../../models/domain.models';
     }
 
     .results-card {
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
     }
 
     .table-container {
@@ -624,17 +787,17 @@ import { EnrollmentDto } from '../../../models/domain.models';
     }
 
     .results-table th {
-      background: #f8f9fa;
-      color: #2c3e50;
+      background: #f8fafc;
+      color: #374151;
       font-weight: 600;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.05em;
     }
 
     .results-table td {
-      padding: 16px 8px;
-      border-bottom: 1px solid #ecf0f1;
+      padding: 12px 16px;
+      border-bottom: 1px solid #e5e7eb;
     }
 
     .employee-cell, .course-cell, .batch-cell {
@@ -644,25 +807,20 @@ import { EnrollmentDto } from '../../../models/domain.models';
     }
 
     .cell-icon {
-      font-size: 1.1rem;
-      width: 1.1rem;
-      height: 1.1rem;
-      color: #95a5a6;
+      font-size: 1rem;
+      width: 1rem;
+      height: 1rem;
+      color: #9ca3af;
     }
 
-    .approver-chip, .rejector-chip {
+    .status-chip {
       font-size: 0.85rem;
       height: 28px;
     }
 
-    .approver-chip {
-      background: #d5f4e6;
-      color: #27ae60;
-    }
-
-    .rejector-chip {
-      background: #fadbd8;
-      color: #e74c3c;
+    .status-chip.approved {
+      background: #f0fdf4;
+      color: #16a34a;
     }
 
     .reason-text {
@@ -680,33 +838,44 @@ import { EnrollmentDto } from '../../../models/domain.models';
         padding: 16px;
       }
 
-      .header-content {
-        flex-direction: column;
-        align-items: flex-start;
+      .status-overview {
+        padding: 16px;
       }
 
-      .page-title {
-        font-size: 2rem;
+      .status-chips {
+        flex-direction: column;
+        gap: 8px;
       }
 
-      .card-content {
+      .card-header {
         flex-direction: column;
         align-items: flex-start;
-        gap: 16px;
+        gap: 12px;
+      }
+
+      .employee-details {
+        width: 100%;
+      }
+
+      .enrollment-meta {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .course-info {
+        grid-template-columns: 1fr;
+        gap: 12px;
       }
 
       .card-actions {
-        width: 100%;
-        justify-content: space-between;
+        flex-direction: column;
+        gap: 8px;
       }
 
       .action-button {
-        flex: 1;
-        min-width: auto;
-      }
-
-      .employee-info {
         width: 100%;
+        min-width: auto;
       }
 
       .table-container {
@@ -798,15 +967,27 @@ export class EnrollmentComponent implements OnInit {
   pending: EnrollmentDto[] = [];
   approved: EnrollmentDto[] = [];
   rejected: EnrollmentDto[] = [];
+  paginatedPending: EnrollmentDto[] = [];
+  paginatedApproved: EnrollmentDto[] = [];
+  paginatedRejected: EnrollmentDto[] = [];
   loading = false;
+
+  // Pagination for each section
+  pendingPage = 1;
+  approvedPage = 1;
+  rejectedPage = 1;
+  pageSize = 6;
+  pendingTotal = 0;
+  approvedTotal = 0;
+  rejectedTotal = 0;
 
   rejectingId: number | null = null;
   rejectReason: string = '';
   processingId: number | null = null;
 
   // Table column definitions
-  approvedColumns: string[] = ['employee', 'course', 'batch', 'approvedBy'];
-  rejectedColumns: string[] = ['employee', 'course', 'batch', 'rejectedBy', 'reason'];
+  approvedColumns: string[] = ['employee', 'course', 'batch', 'status'];
+  rejectedColumns: string[] = ['employee', 'course', 'batch', 'reason'];
 
   @Output() pendingChanged = new EventEmitter<number>();
 
@@ -815,6 +996,22 @@ export class EnrollmentComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {}
 
+  get enrollments(): EnrollmentDto[] {
+    return [...this.pending, ...this.approved, ...this.rejected];
+  }
+
+  getApprovedCount(): number {
+    return this.approved.length;
+  }
+
+  getPendingCount(): number {
+    return this.pending.length;
+  }
+
+  getRejectedCount(): number {
+    return this.rejected.length;
+  }
+
   ngOnInit() {
     this.loading = true;
     this.enrollSvc.getManaged().subscribe({
@@ -822,6 +1019,12 @@ export class EnrollmentComponent implements OnInit {
         this.pending = data.filter(e => e.status === 'Requested');
         this.approved = data.filter(e => e.status === 'Approved');
         this.rejected = data.filter(e => e.status === 'Rejected');
+        
+        this.pendingTotal = this.pending.length;
+        this.approvedTotal = this.approved.length;
+        this.rejectedTotal = this.rejected.length;
+        
+        this.updatePaginatedData();
         this.loading = false;
         this.pendingChanged.emit(this.pending.length);
       },
@@ -909,5 +1112,51 @@ export class EnrollmentComponent implements OnInit {
     } else {
       this.rejected.push({ ...item, status, approvedBy: 'Me', rejectReason: reason });
     }
+
+    // Update totals and pagination
+    this.pendingTotal = this.pending.length;
+    this.approvedTotal = this.approved.length;
+    this.rejectedTotal = this.rejected.length;
+    this.updatePaginatedData();
+  }
+
+  updatePaginatedData() {
+    // Update pending pagination
+    const pendingStart = (this.pendingPage - 1) * this.pageSize;
+    const pendingEnd = pendingStart + this.pageSize;
+    this.paginatedPending = this.pending.slice(pendingStart, pendingEnd);
+
+    // Update approved pagination
+    const approvedStart = (this.approvedPage - 1) * this.pageSize;
+    const approvedEnd = approvedStart + this.pageSize;
+    this.paginatedApproved = this.approved.slice(approvedStart, approvedEnd);
+
+    // Update rejected pagination
+    const rejectedStart = (this.rejectedPage - 1) * this.pageSize;
+    const rejectedEnd = rejectedStart + this.pageSize;
+    this.paginatedRejected = this.rejected.slice(rejectedStart, rejectedEnd);
+  }
+
+  onPendingPageChange(page: number) {
+    this.pendingPage = page;
+    this.updatePaginatedData();
+  }
+
+  onApprovedPageChange(page: number) {
+    this.approvedPage = page;
+    this.updatePaginatedData();
+  }
+
+  onRejectedPageChange(page: number) {
+    this.rejectedPage = page;
+    this.updatePaginatedData();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.pendingPage = 1;
+    this.approvedPage = 1;
+    this.rejectedPage = 1;
+    this.updatePaginatedData();
   }
 }

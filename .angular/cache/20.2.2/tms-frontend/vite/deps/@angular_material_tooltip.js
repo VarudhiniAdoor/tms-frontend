@@ -1,26 +1,20 @@
+import "./chunk-YMISRZUV.js";
 import {
   OverlayModule,
   createFlexibleConnectedPositionStrategy,
   createOverlayRef,
   createRepositionScrollStrategy
-} from "./chunk-ZSATQHAT.js";
-import {
-  ComponentPortal
-} from "./chunk-SUQRTPZW.js";
-import "./chunk-YMISRZUV.js";
+} from "./chunk-GBHREFUQ.js";
 import "./chunk-VENV3F3G.js";
 import {
   coerceBooleanProperty
 } from "./chunk-46HAYV32.js";
 import {
-  CdkScrollableModule,
-  ScrollDispatcher
-} from "./chunk-OC4B4TMU.js";
-import "./chunk-OL6LQQHN.js";
-import "./chunk-7UJZXIJQ.js";
+  ComponentPortal
+} from "./chunk-SUQRTPZW.js";
 import {
   _animationsDisabled
-} from "./chunk-KUELMZIR.js";
+} from "./chunk-42JR5UEE.js";
 import {
   A11yModule,
   AriaDescriber,
@@ -29,8 +23,14 @@ import {
   MatCommonModule,
   hasModifierKey,
   normalizePassiveListenerOptions
-} from "./chunk-BC7M5OPE.js";
+} from "./chunk-RVHUOBH2.js";
 import "./chunk-SV4TNZLU.js";
+import {
+  CdkScrollableModule,
+  ScrollDispatcher
+} from "./chunk-NO24L5G5.js";
+import "./chunk-7UJZXIJQ.js";
+import "./chunk-OL6LQQHN.js";
 import {
   Directionality
 } from "./chunk-MN2GU4AA.js";

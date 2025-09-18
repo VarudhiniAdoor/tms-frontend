@@ -1,12 +1,19 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { FeedbackService } from '../services/feedback.service';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { PaginationComponent } from '../components/pagination/pagination.component';
+import { 
+  faChartBar, faStar, faChartLine, faUsers, faDownload, 
+  faFilter, faSearch, faEye, faEdit, faTrash, faCalendarAlt,
+  faGraduationCap, faBook, faThumbsUp, faThumbsDown, faCheckCircle
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-admin-feedback',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, PaginationComponent, FontAwesomeModule],
   template: `
   <div class="admin-section">
     <!-- Section Header -->
@@ -17,7 +24,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
       </div>
       <div class="header-actions">
         <button class="btn btn-primary" (click)="exportReports()">
-          <i class="icon">📊</i>
+          <fa-icon [icon]="faDownload"></fa-icon>
           Export Reports
         </button>
       </div>
@@ -29,7 +36,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon feedback">
-            <i class="icon">⭐</i>
+            <fa-icon [icon]="faStar"></fa-icon>
           </div>
           <div class="stat-content">
             <h3>{{ totalFeedbacks }}</h3>
@@ -40,7 +47,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         
         <div class="stat-card">
           <div class="stat-icon rating">
-            <i class="icon">📈</i>
+            <fa-icon [icon]="faChartLine"></fa-icon>
           </div>
           <div class="stat-content">
             <h3>{{ averageRating }}/5</h3>
@@ -51,7 +58,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         
         <div class="stat-card">
           <div class="stat-icon batches">
-            <i class="icon">📅</i>
+            <fa-icon [icon]="faCalendarAlt"></fa-icon>
           </div>
           <div class="stat-content">
             <h3>{{ feedbackBatches.length }}</h3>
@@ -65,7 +72,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
       <!-- Search and Filters -->
       <div class="search-section">
         <div class="search-container">
-          <i class="search-icon">🔍</i>
+          <fa-icon [icon]="faSearch" class="search-icon"></fa-icon>
           <input 
             [(ngModel)]="searchTerm" 
             placeholder="Search by course, batch, or user..." 
@@ -97,7 +104,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
         </div>
         
         <div class="table-container">
-          <table class="data-table" *ngIf="filteredFeedbacks.length > 0">
+          <table class="data-table" *ngIf="paginatedFeedbacks.length > 0">
             <thead>
               <tr>
                 <th>Course</th>
@@ -110,7 +117,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let f of filteredFeedbacks" class="data-row">
+              <tr *ngFor="let f of paginatedFeedbacks" class="data-row">
                 <td>
                   <div class="course-info">
                     <div class="course-name">{{ f.courseName || 'Unknown Course' }}</div>
@@ -131,7 +138,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
                 <td>
                   <div class="rating-display">
                     <div class="stars">
-                      <span *ngFor="let star of getStars(f.rating || 0)" [class.filled]="star" class="star">⭐</span>
+                      <fa-icon *ngFor="let star of getStars(f.rating || 0)" [icon]="faStar" [class.filled]="star" class="star"></fa-icon>
                     </div>
                     <span class="rating-value">{{ f.rating || 0 }}/5</span>
                   </div>
@@ -158,7 +165,9 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
           
           <!-- Empty State -->
           <div class="empty-state" *ngIf="filteredFeedbacks.length === 0">
-            <div class="empty-icon">📊</div>
+            <div class="empty-icon">
+              <fa-icon [icon]="faChartBar"></fa-icon>
+            </div>
             <h3>No feedback found</h3>
             <p>No feedback matches your search criteria</p>
             <button class="btn btn-outline" (click)="clearFilters()">
@@ -166,6 +175,16 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
             </button>
           </div>
         </div>
+
+        <!-- Pagination -->
+        <app-pagination
+          *ngIf="filteredFeedbacks.length > 0"
+          [currentPage]="currentPage"
+          [totalItems]="totalItems"
+          [pageSize]="pageSize"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)">
+        </app-pagination>
       </div>
     </div>
   </div>
@@ -276,8 +295,23 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
     /* Admin Section Styles */
     .admin-section {
       padding: 24px;
-      background: var(--light-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(156, 39, 176, 0.03) 30%, rgba(243, 229, 245, 0.6) 60%, rgba(248, 250, 252, 0.8) 100%);
       min-height: 100vh;
+      position: relative;
+    }
+    .admin-section::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.05) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
     }
 
     .section-header {
@@ -594,7 +628,13 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
     /* Dark Mode Support */
     body.dark-mode .admin-section {
-      background: var(--dark-bg);
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(45, 27, 105, 0.4) 30%, rgba(17, 17, 24, 0.9) 100%);
+    }
+    body.dark-mode .admin-section::before {
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(156, 39, 176, 0.08) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
     }
 
     body.dark-mode .section-header {
@@ -670,8 +710,32 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 export class AdminFeedbackComponent implements OnInit {
   feedbacks: any[] = [];
   filteredFeedbacks: any[] = [];
+  paginatedFeedbacks: any[] = [];
   searchTerm = '';
   selectedBatch = '';
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
+
+  // FontAwesome Icons
+  faChartBar = faChartBar;
+  faStar = faStar;
+  faChartLine = faChartLine;
+  faUsers = faUsers;
+  faDownload = faDownload;
+  faFilter = faFilter;
+  faSearch = faSearch;
+  faEye = faEye;
+  faEdit = faEdit;
+  faTrash = faTrash;
+  faCalendarAlt = faCalendarAlt;
+  faGraduationCap = faGraduationCap;
+  faBook = faBook;
+  faThumbsUp = faThumbsUp;
+  faThumbsDown = faThumbsDown;
+  faCheckCircle = faCheckCircle;
 
   // Statistics
   totalFeedbacks = 0;
@@ -691,12 +755,16 @@ export class AdminFeedbackComponent implements OnInit {
       next: (data) => {
         this.feedbacks = data || [];
         this.filteredFeedbacks = [...this.feedbacks];
+        this.totalItems = this.filteredFeedbacks.length;
+        this.updatePaginatedFeedbacks();
         this.calculateStatistics();
       },
       error: (error) => {
         console.error('Error loading feedbacks:', error);
         this.feedbacks = [];
         this.filteredFeedbacks = [];
+        this.totalItems = 0;
+        this.updatePaginatedFeedbacks();
       }
     });
   }
@@ -762,12 +830,35 @@ export class AdminFeedbackComponent implements OnInit {
     }
     
     this.filteredFeedbacks = filtered;
+    this.totalItems = this.filteredFeedbacks.length;
+    this.currentPage = 1;
+    this.updatePaginatedFeedbacks();
   }
 
   clearFilters() {
     this.searchTerm = '';
     this.selectedBatch = '';
     this.filteredFeedbacks = [...this.feedbacks];
+    this.totalItems = this.filteredFeedbacks.length;
+    this.currentPage = 1;
+    this.updatePaginatedFeedbacks();
+  }
+
+  updatePaginatedFeedbacks() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedFeedbacks = this.filteredFeedbacks.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePaginatedFeedbacks();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1;
+    this.updatePaginatedFeedbacks();
   }
 
   getStars(rating: number): boolean[] {

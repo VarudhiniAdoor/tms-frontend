@@ -1,15 +1,52 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ChatbotComponent } from '../../chatbot/chatbot.component';
+import { PaginationComponent } from '../../pagination/pagination.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { BatchService } from '../../../services/batch.service';
 import { EnrollmentService } from '../../../services/enrollment.service';
 import { Batch } from '../../../models/domain.models';
+import { 
+  faBook, faCheckCircle, faClock, faUsers, faCalendarAlt, faGraduationCap
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-employee-batches',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, ChatbotComponent, PaginationComponent, FontAwesomeModule],
+  styleUrls: ['./employee-dashboard.css'],
   template: `
     <div class="batches-content">
+      <!-- Professional Section Header -->
+      <div class="employee-section-header">
+        <div class="header-content">
+          <div class="header-left">
+            <h1 class="section-title">Active Batches</h1>
+            <p class="section-description">Browse and enroll in available training batches to enhance your skills and advance your career</p>
+          </div>
+          <div class="header-stats">
+            <div class="stat-button available">
+              <div class="stat-icon">
+                <fa-icon [icon]="faBook"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ batches.length }}</span>
+                <span class="stat-label">Available</span>
+              </div>
+            </div>
+            <div class="stat-button enrolled">
+              <div class="stat-icon">
+                <fa-icon [icon]="faCheckCircle"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ enrolledCount }}</span>
+                <span class="stat-label">Enrolled</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Loading State -->
       <div *ngIf="loading" class="loading-container">
         <div class="spinner">⏳</div>
@@ -24,10 +61,10 @@ import { Batch } from '../../../models/domain.models';
 
       <!-- Batches Grid -->
       <div class="batches-grid" *ngIf="!loading && batches.length > 0">
-        <div *ngFor="let b of batches" class="batch-card" [class.enrolled]="getStatus(b.batchId) !== 'Not Enrolled'">
+        <div *ngFor="let b of paginatedBatches" class="batch-card" [class.enrolled]="getStatus(b.batchId) !== 'Not Enrolled'">
           <div class="batch-header">
             <div class="batch-icon">
-              <i class="icon">📚</i>
+              <fa-icon [icon]="faGraduationCap"></fa-icon>
             </div>
             <div class="batch-info">
               <h3 class="batch-title">{{ b.batchName }}</h3>
@@ -43,14 +80,14 @@ import { Batch } from '../../../models/domain.models';
           <div class="batch-content">
             <div class="course-info">
               <div class="info-item">
-                <i class="info-icon">🎓</i>
+                <fa-icon [icon]="faBook" class="info-icon"></fa-icon>
                 <div class="info-content">
                   <span class="info-label">Course</span>
                   <span class="info-value">{{ b.calendar?.course?.courseName ?? 'Course not specified' }}</span>
                 </div>
               </div>
               <div class="info-item" *ngIf="b.calendar?.course?.durationDays">
-                <i class="info-icon">⏱️</i>
+                <fa-icon [icon]="faClock" class="info-icon"></fa-icon>
                 <div class="info-content">
                   <span class="info-label">Duration</span>
                   <span class="info-value">{{ b.calendar?.course?.durationDays }} days</span>
@@ -60,14 +97,14 @@ import { Batch } from '../../../models/domain.models';
             
             <div class="date-info">
               <div class="date-item">
-                <i class="info-icon">📅</i>
+                <fa-icon [icon]="faCalendarAlt" class="info-icon"></fa-icon>
                 <div class="date-content">
                   <span class="date-label">Start Date</span>
                   <span class="date-value">{{ b.calendar?.startDate | date:'MMM dd, yyyy' }}</span>
                 </div>
               </div>
               <div class="date-item">
-                <i class="info-icon">🏁</i>
+                <fa-icon [icon]="faCalendarAlt" class="info-icon"></fa-icon>
                 <div class="date-content">
                   <span class="date-label">End Date</span>
                   <span class="date-value">{{ b.calendar?.endDate | date:'MMM dd, yyyy' }}</span>
@@ -89,6 +126,16 @@ import { Batch } from '../../../models/domain.models';
         </div>
       </div>
 
+      <!-- Pagination -->
+      <app-pagination
+        *ngIf="!loading && batches.length > 0"
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
+
       <!-- Empty State -->
       <div *ngIf="!loading && batches.length === 0" class="empty-state">
         <div class="empty-icon">📚</div>
@@ -100,6 +147,9 @@ import { Batch } from '../../../models/domain.models';
       </button>
       </div>
     </div>
+
+    <!-- Chatbot -->
+    <app-chatbot></app-chatbot>
   `,
   styles: [`
     .batches-content {
@@ -495,9 +545,24 @@ import { Batch } from '../../../models/domain.models';
 })
 export class EmployeeBatchesComponent implements OnInit {
   batches: Batch[] = [];
+  paginatedBatches: Batch[] = [];
   loading = false;
   warning?: string;
   statusByBatch = new Map<number,string>();
+  enrolledCount = 0;
+
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
+
+  // FontAwesome Icons
+  faBook = faBook;
+  faCheckCircle = faCheckCircle;
+  faClock = faClock;
+  faUsers = faUsers;
+  faCalendarAlt = faCalendarAlt;
+  faGraduationCap = faGraduationCap;
 
   constructor(private batchSvc: BatchService, private enrollSvc: EnrollmentService) {}
 
@@ -510,12 +575,16 @@ export class EmployeeBatchesComponent implements OnInit {
     this.batchSvc.getAll().subscribe({
       next: data => {
         this.batches = data;
+        this.totalItems = this.batches.length;
+        this.updatePaginatedBatches();
         this.loading = false;
         this.enrollSvc.getMyEnrollments().subscribe(list => {
           (list || []).forEach(e => {
             const matching = this.batches.find(b => b.batchName === e.batchName);
             if (matching) this.statusByBatch.set(matching.batchId, e.status);
           });
+          // Calculate enrolled count
+          this.enrolledCount = (list || []).filter(e => e.status === 'Approved').length;
         });
       },
       error: () => this.loading = false
@@ -539,5 +608,22 @@ export class EmployeeBatchesComponent implements OnInit {
     this.enrollSvc.requestEnrollment(batchId).subscribe({
       next: dto => { this.statusByBatch.set(batchId, dto.status); alert('Enrollment requested!'); }
     });
+  }
+
+  updatePaginatedBatches() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedBatches = this.batches.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePaginatedBatches();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1;
+    this.updatePaginatedBatches();
   }
 }

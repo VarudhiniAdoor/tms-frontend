@@ -1,15 +1,61 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormControl } from '@angular/forms';
+import { ChatbotComponent } from '../../chatbot/chatbot.component';
+import { PaginationComponent } from '../../pagination/pagination.component';
+import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { EnrollmentService } from '../../../services/enrollment.service';
 import { FeedbackService } from '../../../services/feedback.service';
+import { 
+  faChartBar, faCheckCircle, faClock, faBook, faUser, faCalendarAlt
+} from '@fortawesome/free-solid-svg-icons';
 
 @Component({
   selector: 'app-my-enrollments',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ChatbotComponent, PaginationComponent, FontAwesomeModule],
+  styleUrls: ['./employee-dashboard.css'],
   template: `
   <div class="enrollments-content">
+      <!-- Professional Section Header -->
+      <div class="employee-section-header">
+        <div class="header-content">
+          <div class="header-left">
+            <h1 class="section-title">My Enrollments</h1>
+            <p class="section-description">Track your course enrollment status, monitor progress, and manage your learning journey</p>
+          </div>
+          <div class="header-stats">
+            <div class="stat-button total">
+              <div class="stat-icon">
+                <fa-icon [icon]="faChartBar"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ enrollments.length }}</span>
+                <span class="stat-label">Total</span>
+              </div>
+            </div>
+            <div class="stat-button approved">
+              <div class="stat-icon">
+                <fa-icon [icon]="faCheckCircle"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ getApprovedCount() }}</span>
+                <span class="stat-label">Approved</span>
+              </div>
+            </div>
+            <div class="stat-button pending">
+              <div class="stat-icon">
+                <fa-icon [icon]="faClock"></fa-icon>
+              </div>
+              <div class="stat-content">
+                <span class="stat-value">{{ getPendingCount() }}</span>
+                <span class="stat-label">Pending</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     <!-- Loading State -->
     <div *ngIf="loading" class="loading-container">
       <div class="spinner">⏳</div>
@@ -40,10 +86,12 @@ import { FeedbackService } from '../../../services/feedback.service';
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let e of enrollments" class="enrollment-row" [class]="getStatusClass(e.status)">
+            <tr *ngFor="let e of paginatedEnrollments" class="enrollment-row" [class]="getStatusClass(e.status)">
               <td class="course-cell">
                 <div class="course-info">
-                  <div class="course-icon">📚</div>
+                  <div class="course-icon">
+                    <fa-icon [icon]="faBook"></fa-icon>
+                  </div>
                   <div class="course-details">
                     <div class="course-name">{{ e.courseName }}</div>
                   </div>
@@ -112,6 +160,16 @@ import { FeedbackService } from '../../../services/feedback.service';
           </tbody>
         </table>
       </div>
+
+      <!-- Pagination -->
+      <app-pagination
+        *ngIf="enrollments.length > 0"
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [pageSize]="pageSize"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)">
+      </app-pagination>
     </div>
 
     <!-- Feedback Modal -->
@@ -238,6 +296,9 @@ import { FeedbackService } from '../../../services/feedback.service';
       <h3>No enrollments found</h3>
       <p>You haven't enrolled in any courses yet. Check out the available batches to get started!</p>
     </div>
+
+    <!-- Chatbot -->
+    <app-chatbot></app-chatbot>
   </div>
 `,
   styles: [`
@@ -1064,7 +1125,13 @@ import { FeedbackService } from '../../../services/feedback.service';
 })
 export class MyEnrollmentsComponent implements OnInit {
   enrollments: any[] = [];
+  paginatedEnrollments: any[] = [];
   loading = false;
+  
+  // Pagination
+  currentPage = 1;
+  pageSize = 6;
+  totalItems = 0;
   
   // Modal states
   showFeedbackModal = false;
@@ -1075,6 +1142,14 @@ export class MyEnrollmentsComponent implements OnInit {
   // Form controls
   rating = new FormControl('');
   feedbackText = new FormControl('');
+  
+  // FontAwesome Icons
+  faChartBar = faChartBar;
+  faCheckCircle = faCheckCircle;
+  faClock = faClock;
+  faBook = faBook;
+  faUser = faUser;
+  faCalendarAlt = faCalendarAlt;
   
   // Submission state
   isSubmitting = false;
@@ -1093,6 +1168,8 @@ export class MyEnrollmentsComponent implements OnInit {
     this.enrollmentService.getMyEnrollments().subscribe({
       next: (data) => {
         this.enrollments = data || [];
+        this.totalItems = this.enrollments.length;
+        this.updatePaginatedEnrollments();
         // Load feedback for each enrollment
         this.loadFeedbackForEnrollments();
         this.loading = false;
@@ -1309,6 +1386,23 @@ export class MyEnrollmentsComponent implements OnInit {
   closeRejectionModal() {
     this.showRejectionModal = false;
     this.rejectionReason = '';
+  }
+
+  updatePaginatedEnrollments() {
+    const startIndex = (this.currentPage - 1) * this.pageSize;
+    const endIndex = startIndex + this.pageSize;
+    this.paginatedEnrollments = this.enrollments.slice(startIndex, endIndex);
+  }
+
+  onPageChange(page: number) {
+    this.currentPage = page;
+    this.updatePaginatedEnrollments();
+  }
+
+  onPageSizeChange(pageSize: number) {
+    this.pageSize = pageSize;
+    this.currentPage = 1;
+    this.updatePaginatedEnrollments();
   }
 
 

@@ -36,6 +36,7 @@ export interface EnrollmentDto {
   status: string;
   approvedBy?: string | null;
   rejectReason? : string;
+  createdAt?: string;
 }
 
 export interface FeedbackCreateDto {
